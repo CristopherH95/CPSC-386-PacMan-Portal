@@ -1,6 +1,7 @@
 import pygame
 from event_loop import EventLoop
 from maze import Maze
+from pacman import PacMan
 
 
 class PacManPortalGame:
@@ -17,16 +18,18 @@ class PacManPortalGame:
         pygame.display.set_caption('PacMan Portal')
         self.clock = pygame.time.Clock()
         self.maze = Maze(screen=self.screen, maze_map_file='maze_map.txt')
+        self.player = PacMan(screen=self.screen, maze=self.maze)
 
     def update_screen(self):
         """Update the game screen"""
         self.screen.fill(PacManPortalGame.BLACK_BG)
         self.maze.blit()
+        self.player.update()
         pygame.display.flip()
 
     def run_game(self):
         """Run the game's event loop, using an EventLoop object"""
-        e_loop = EventLoop(loop_running=True)
+        e_loop = EventLoop(loop_running=True, actions=self.player.event_map)
 
         while e_loop.loop_running:
             self.clock.tick(60)  # 60 fps limit

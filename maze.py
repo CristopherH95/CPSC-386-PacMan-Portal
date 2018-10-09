@@ -10,7 +10,7 @@ class Maze:
     def __init__(self, screen, maze_map_file):
         self.screen = screen
         self.map_file = maze_map_file
-        self.block_size = 10
+        self.block_size = 20
         self.block_image = pygame.Surface((self.block_size, self.block_size))
         self.block_image.fill(Maze.NEON_BLUE)
         self.shield_image = pygame.Surface((self.block_size, self.block_size // 2))
@@ -19,22 +19,31 @@ class Maze:
             self.map_lines = file.readlines()
         self.maze_blocks = []
         self.shield_blocks = []
+        self.player_spawn = None
         self.build_maze()
 
     def build_maze(self):
         """Build the maze layout based on the maze map text file"""
         if self.maze_blocks:
             self.maze_blocks.clear()
+        y_start = self.screen.get_height() // 12
         y = 0
         for line in self.map_lines:
+            x_start = self.screen.get_width() // 5
             x = 0
             for co in line:
                 if co == 'x':
-                    self.maze_blocks.append(pygame.Rect(x * self.block_size, y * self.block_size,
+                    self.maze_blocks.append(pygame.Rect(x_start + (x * self.block_size),
+                                                        y_start + (y * self.block_size),
                                                         self.block_size, self.block_size))
                 elif co == 's':
-                    self.shield_blocks.append(pygame.Rect(x * self.block_size, y * self.block_size,
+                    self.shield_blocks.append(pygame.Rect(x_start + (x * self.block_size),
+                                                          y_start + (y * self.block_size),
                                                           self.block_size // 2, self.block_size // 2))
+                elif co == 'o':
+                    self.player_spawn = (x_start + (x * self.block_size) + (self.block_size // 2),
+                                         y_start + (y * self.block_size) + (self.block_size // 2))
+                    print(self.player_spawn)
                 x += 1
             y += 1
 
