@@ -18,9 +18,10 @@ class PacMan:
         self.action_map = {pygame.K_UP: self.set_move_up, pygame.K_LEFT: self.set_move_left,
                            pygame.K_DOWN: self.set_move_down, pygame.K_RIGHT: self.set_move_right}
 
-    def reset_direction(self, *args):
-        """Reset the movement direction"""
-        self.direction = None
+    def reset_direction(self, event):
+        """Reset the movement direction if key-up on movement keys"""
+        if event.key in (pygame.K_UP, pygame.K_DOWN, pygame.K_LEFT, pygame.K_RIGHT):
+            self.direction = None
 
     def change_direction(self, event):
         """Change direction based on the event key"""

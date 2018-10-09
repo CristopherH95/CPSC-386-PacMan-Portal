@@ -20,6 +20,7 @@ class Maze:
         self.maze_blocks = []
         self.shield_blocks = []
         self.player_spawn = None
+        self.ghost_spawn = []
         self.build_maze()
 
     def build_maze(self):
@@ -43,7 +44,9 @@ class Maze:
                 elif co == 'o':
                     self.player_spawn = (x_start + (x * self.block_size) + (self.block_size // 2),
                                          y_start + (y * self.block_size) + (self.block_size // 2))
-                    print(self.player_spawn)
+                elif co == 'g':
+                    self.ghost_spawn.append((x_start + (x * self.block_size) + (self.block_size // 2),
+                                            y_start + (y * self.block_size) + (self.block_size // 2)))
                 x += 1
             y += 1
 

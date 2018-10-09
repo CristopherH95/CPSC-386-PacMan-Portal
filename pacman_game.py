@@ -2,6 +2,7 @@ import pygame
 from event_loop import EventLoop
 from maze import Maze
 from pacman import PacMan
+from ghost import Ghost
 
 
 class PacManPortalGame:
@@ -19,11 +20,20 @@ class PacManPortalGame:
         self.clock = pygame.time.Clock()
         self.maze = Maze(screen=self.screen, maze_map_file='maze_map.txt')
         self.player = PacMan(screen=self.screen, maze=self.maze)
+        self.ghosts = []
+        self.spawn_ghosts()
+
+    def spawn_ghosts(self):
+        """Create all ghosts at their starting positions"""
+        while len(self.maze.ghost_spawn) > 0:
+            self.ghosts.append(Ghost(screen=self.screen, maze=self.maze, target=self.player))
 
     def update_screen(self):
         """Update the game screen"""
         self.screen.fill(PacManPortalGame.BLACK_BG)
         self.maze.blit()
+        for g in self.ghosts:
+            g.blit()
         self.player.update()
         pygame.display.flip()
 
