@@ -42,7 +42,7 @@ class PacManPortalGame:
 
     def update_score(self):
         """Check if PacMan has eaten pellets that increase the score"""
-        n_score = self.player.eat_pellets()
+        n_score = self.player.eat()
         self.scoreboard.update(n_score)
 
     def update_screen(self):

@@ -85,14 +85,21 @@ class PacMan(pygame.sprite.Sprite):
         """Blit the PacMan sprite to the screen"""
         self.screen.blit(self.image, self.rect)
 
-    def eat_pellets(self):
+    def eat(self):
         """Eat pellets from the maze and return the score accumulated"""
         score = 0
         pellets_left = []
+        fruit_left = []
         for pellet in self.maze.pellets:
             if not pellet.colliderect(self.rect):
                 pellets_left.append(pellet)
             else:
                 score += 10
+        for fruit in self.maze.fruits:
+            if not fruit.colliderect(self.rect):
+                fruit_left.append(fruit)
+            else:
+                score += 20
         self.maze.pellets = pellets_left
+        self.maze.fruits = fruit_left
         return score
