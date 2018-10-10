@@ -16,4 +16,7 @@ class EventLoop:
             if event.type == pygame.QUIT:
                 self.action_map[event.type]()   # quit game with no argument passed
             elif event.type in self.action_map:
-                self.action_map[event.type](event)    # execute events from map
+                try:
+                    self.action_map[event.type](event)    # execute events from map
+                except TypeError:
+                    self.action_map[event.type]()   # event function may not accept any parameters

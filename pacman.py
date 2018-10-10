@@ -1,17 +1,21 @@
 import pygame
 
 
-class PacMan:
+class PacMan(pygame.sprite.Sprite):
     """Represents the player character 'PacMan' and its related logic/control"""
     PAC_YELLOW = (255, 255, 0)
 
     def __init__(self, screen, maze):
+        super().__init__()
         self.screen = screen
         self.radius = 5
         self.maze = maze
         self.direction = None
         self.speed = 5
-        self.rect = pygame.draw.circle(self.screen, PacMan.PAC_YELLOW, maze.player_spawn, self.radius)
+        self.image = pygame.Surface((self.radius * 2, self.radius * 2))
+        self.rect = self.image.get_rect()
+        self.rect.centerx, self.rect.centery = self.maze.player_spawn
+        pygame.draw.circle(self.image, PacMan.PAC_YELLOW, (self.radius, self.radius), self.radius)
 
         # Keyboard related events/actions/releases
         self.event_map = {pygame.KEYDOWN: self.change_direction, pygame.KEYUP: self.reset_direction}
@@ -76,5 +80,19 @@ class PacMan:
                     self.rect.bottom += self.speed
                 elif self.direction == 'r':
                     self.rect.right += self.speed
-        n_pos = self.rect.centerx, self.rect.centery
-        self.rect = pygame.draw.circle(self.screen, PacMan.PAC_YELLOW, n_pos, self.radius)
+
+    def blit(self):
+        """Blit the PacMan sprite to the screen"""
+        self.screen.blit(self.image, self.rect)
+
+    def eat_pellets(self):
+        """Eat pellets from the maze and return the score accumulated"""
+        score = 0
+        pellets_left = []
+        for pellet in self.maze.pellets:
+            if not pellet.colliderect(self.rect):
+                pellets_left.append(pellet)
+            else:
+                score += 10
+        self.maze.pellets = pellets_left
+        return score
