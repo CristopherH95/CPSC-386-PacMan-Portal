@@ -12,8 +12,9 @@ class Ghost:
         self.image = pygame.Surface((self.height, self.width))
         self.image.fill((255, 255, 255))
         self.rect = self.image.get_rect()
-        self.rect.centerx, self.rect.centery = maze.ghost_spawn.pop()
-        self.destination = None
+        spawn_info = maze.ghost_spawn.pop()
+        self.rect.centerx, self.rect.centery = spawn_info[1]
+        self.search = None
         self.direction = None
         self.speed = 4
 
@@ -42,31 +43,72 @@ class Ghost:
             del tests[rem]
         return tests.keys()
 
-    def get_new_direction(self):
+    def get_chase_direction(self):
         """Figure out a new direction to move in based on the target and walls"""
         options = self.get_direction_options()
-        if self.target.rect.y < self.rect.y and 'u' in options:
-            return 'u'
-        if self.target.rect.x > self.rect.x and 'r' in options:
-            return 'r'
-        if self.target.rect.x < self.rect.x and 'l' in options:
-            return 'l'
-        if self.target.rect.y > self.rect.y and 'd' in options:
-            return 'd'
+        if self.target.rect.centery < self.rect.centery and 'u' in options:
+            return 'u'  # target is up, and moving up is available
+        if self.target.rect.centery < self.rect.centery and 'u' not in options:
+            self.search = 'u'   # target is up, but can't move that way, search for next 'up'
+            if 'l' in options:
+                return 'l'      # try moving left
+            if 'r' in options:
+                return 'r'      # try moving right
+            if 'd' in options:
+                return 'd'  # try moving down
+        if self.target.rect.centerx > self.rect.centerx and 'r' in options:
+            return 'r'  # target is to the right, and moving right is available
+        if self.target.rect.centerx > self.rect.centerx and 'r' not in options:
+            self.search = 'r'   # target is to the right, but can't move that way, search for next 'right'
+            if 'u' in options:
+                return 'u'  # try moving up
+            if 'd' in options:
+                return 'd'  # try moving down
+            if 'l' in options:
+                return 'l'      # try moving left
+        if self.target.rect.centerx < self.rect.centerx and 'l' in options:
+            return 'l'  # target is to the left, and moving left is available
+        if self.target.rect.centerx < self.rect.centerx and 'l' not in options:
+            self.search = 'l'   # target is to the left, but can't move that way, search for next 'left'
+            if 'u' in options:
+                return 'u'  # try moving up
+            if 'd' in options:
+                return 'd'  # try moving down
+            if 'r' in options:
+                return 'r'      # try moving right
+        if self.target.rect.centery > self.rect.centery and 'd' in options:
+            return 'd'  # target is below, and moving down is available
+        if self.target.rect.centery > self.rect.centery and 'd' not in options:
+            self.search = 'd'   # target is below, but can't move that way, search for next 'down'
+            if 'l' in options:
+                return 'l'  # try moving left
+            if 'r' in options:
+                return 'r'  # try moving right
+            if 'u' in options:
+                return 'u'  # try moving up
         return None
 
     def update(self):
         """Update the ghost position"""
-        self.direction = self.get_new_direction()
+        # self.direction = self.get_chase_direction()
         if self.direction:
-            if self.direction == 'u':
+            options = self.get_direction_options()
+            # print('options: ' + str(options))
+            if self.search and self.search in options:
+                self.direction = self.search
+                self.search = None
+            if self.direction == 'u' and 'u' in options:
                 self.rect.top -= self.speed
-            elif self.direction == 'l':
+            elif self.direction == 'l' and 'l' in options:
                 self.rect.left -= self.speed
-            elif self.direction == 'd':
+            elif self.direction == 'd' and 'd' in options:
                 self.rect.bottom += self.speed
-            elif self.direction == 'r':
+            elif self.direction == 'r' and 'r' in options:
                 self.rect.right += self.speed
+            else:
+                self.direction = self.get_chase_direction()
+                # print(self.direction)
+        # self.check_tile()
 
     def blit(self):
         """Blit ghost image to the screen"""

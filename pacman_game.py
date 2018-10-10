@@ -27,7 +27,13 @@ class PacManPortalGame:
         self.player = PacMan(screen=self.screen, maze=self.maze)
         self.ghosts = []
         self.spawn_ghosts()
-        self.actions = {PacManPortalGame.START_EVENT: self.maze.remove_shields}
+        self.actions = {PacManPortalGame.START_EVENT: self.init_ghosts}
+
+    def init_ghosts(self):
+        """Remove the maze shields and kick start the ghost AI"""
+        self.maze.remove_shields()
+        for g in self.ghosts:
+            g.direction = g.get_chase_direction()
 
     def spawn_ghosts(self):
         """Create all ghosts at their starting positions"""
