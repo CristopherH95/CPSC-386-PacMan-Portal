@@ -17,7 +17,7 @@ class Ghost:
         self.tile = spawn_info[0]
         self.search = None
         self.direction = None
-        self.speed = maze.block_size
+        self.speed = maze.block_size / 4
 
     def get_direction_options(self):
         """Check if the ghost is blocked by any maze barriers and return all directions possible to move in"""
@@ -89,6 +89,18 @@ class Ghost:
                 return 'u'  # try moving up
         return None
 
+    def recursive_find_move(self):
+        """Recursively search for a path to the target, and return a move forward"""
+        
+
+    def get_nearest_col(self):
+        """Get the current column location on the maze map"""
+        return (self.rect.x - (self.screen.get_width() // 5)) // self.maze.block_size
+
+    def get_nearest_row(self):
+        """Get the current row location on the maze map"""
+        return (self.rect.y - (self.screen.get_height() // 12)) // self.maze.block_size
+
     def update(self):
         """Update the ghost position"""
         # self.direction = self.get_chase_direction()
@@ -100,18 +112,15 @@ class Ghost:
                 self.search = None
             if self.direction == 'u' and 'u' in options:
                 self.rect.centery -= self.speed
-                self.tile = (self.tile[0] - 1, self.tile[1])
             elif self.direction == 'l' and 'l' in options:
                 self.rect.centerx -= self.speed
-                self.tile = (self.tile[0], self.tile[1] - 1)
             elif self.direction == 'd' and 'd' in options:
                 self.rect.centery += self.speed
-                self.tile = (self.tile[0] + 1, self.tile[1])
             elif self.direction == 'r' and 'r' in options:
                 self.rect.centerx += self.speed
-                self.tile = (self.tile[0], self.tile[1] + 1)
             else:
                 self.direction = self.get_chase_direction()
+            self.tile = (self.get_nearest_row(), self.get_nearest_col())
 
     def blit(self):
         """Blit ghost image to the screen"""

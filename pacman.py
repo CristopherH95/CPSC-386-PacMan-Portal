@@ -13,7 +13,7 @@ class PacMan(pygame.sprite.Sprite):
         self.spawn_info = self.maze.player_spawn[1]
         self.tile = self.maze.player_spawn[0]
         self.direction = None
-        self.speed = maze.block_size    # move one brick at a time
+        self.speed = maze.block_size / 4    # move one brick at a time
         self.image = pygame.Surface((self.radius * 2, self.radius * 2))
         self.rect = self.image.get_rect()
         self.rect.centerx, self.rect.centery = self.spawn_info   # screen coordinates for spawn
@@ -50,17 +50,25 @@ class PacMan(pygame.sprite.Sprite):
         """Set move direction to right"""
         self.direction = 'r'
 
+    def get_nearest_col(self):
+        """Get the current column location on the maze map"""
+        return (self.rect.x - (self.screen.get_width() // 5)) // self.maze.block_size
+
+    def get_nearest_row(self):
+        """Get the current row location on the maze map"""
+        return (self.rect.y - (self.screen.get_height() // 12)) // self.maze.block_size
+
     def is_blocked(self):
         """Check if PacMan is blocked by any maze barriers, return True if blocked, False if clear"""
         if self.direction is not None:
             if self.direction == 'u':
-                test = self.rect.move((0, -(self.radius * 2)))
+                test = self.rect.move((0, -(self.maze.block_size // 2)))
             elif self.direction == 'l':
-                test = self.rect.move((-(self.radius * 2), 0))
+                test = self.rect.move((-(self.maze.block_size // 2), 0))
             elif self.direction == 'd':
-                test = self.rect.move((0, (self.radius * 2)))
+                test = self.rect.move((0, (self.maze.block_size // 2)))
             else:
-                test = self.rect.move(((self.radius * 2), 0))
+                test = self.rect.move(((self.maze.block_size // 2), 0))
 
             for wall in self.maze.maze_blocks:
                 if wall.colliderect(test):
@@ -76,17 +84,13 @@ class PacMan(pygame.sprite.Sprite):
             if not self.is_blocked():
                 if self.direction == 'u':
                     self.rect.centery -= self.speed
-                    self.tile = (self.tile[0] - 1, self.tile[1])
                 elif self.direction == 'l':
                     self.rect.centerx -= self.speed
-                    self.tile = (self.tile[0], self.tile[1] - 1)
                 elif self.direction == 'd':
                     self.rect.centery += self.speed
-                    self.tile = (self.tile[0] + 1, self.tile[1])
                 elif self.direction == 'r':
                     self.rect.centerx += self.speed
-                    self.tile = (self.tile[0], self.tile[1] + 1)
-        # print(self.tile)
+            self.tile = (self.get_nearest_row(), self.get_nearest_col())
 
     def blit(self):
         """Blit the PacMan sprite to the screen"""
