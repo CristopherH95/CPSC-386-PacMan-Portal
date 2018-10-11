@@ -33,12 +33,13 @@ class PacManPortalGame:
         """Remove the maze shields and kick start the ghost AI"""
         self.maze.remove_shields()
         for g in self.ghosts:
-            g.direction = g.get_chase_direction()
+            g.enable()
 
     def spawn_ghosts(self):
         """Create all ghosts at their starting positions"""
         while len(self.maze.ghost_spawn) > 0:
-            self.ghosts.append(Ghost(screen=self.screen, maze=self.maze, target=self.player))
+            spawn_info = self.maze.ghost_spawn.pop()
+            self.ghosts.append(Ghost(screen=self.screen, maze=self.maze, target=self.player, spawn_info=spawn_info))
 
     def update_score(self):
         """Check if PacMan has eaten pellets that increase the score"""
