@@ -14,9 +14,10 @@ class Ghost:
         self.rect = self.image.get_rect()
         spawn_info = maze.ghost_spawn.pop()
         self.rect.centerx, self.rect.centery = spawn_info[1]
+        self.tile = spawn_info[0]
         self.search = None
         self.direction = None
-        self.speed = 4
+        self.speed = maze.block_size
 
     def get_direction_options(self):
         """Check if the ghost is blocked by any maze barriers and return all directions possible to move in"""
@@ -98,17 +99,19 @@ class Ghost:
                 self.direction = self.search
                 self.search = None
             if self.direction == 'u' and 'u' in options:
-                self.rect.top -= self.speed
+                self.rect.centery -= self.speed
+                self.tile = (self.tile[0] - 1, self.tile[1])
             elif self.direction == 'l' and 'l' in options:
-                self.rect.left -= self.speed
+                self.rect.centerx -= self.speed
+                self.tile = (self.tile[0], self.tile[1] - 1)
             elif self.direction == 'd' and 'd' in options:
-                self.rect.bottom += self.speed
+                self.rect.centery += self.speed
+                self.tile = (self.tile[0] + 1, self.tile[1])
             elif self.direction == 'r' and 'r' in options:
-                self.rect.right += self.speed
+                self.rect.centerx += self.speed
+                self.tile = (self.tile[0], self.tile[1] + 1)
             else:
                 self.direction = self.get_chase_direction()
-                # print(self.direction)
-        # self.check_tile()
 
     def blit(self):
         """Blit ghost image to the screen"""

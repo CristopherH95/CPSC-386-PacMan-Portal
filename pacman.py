@@ -10,11 +10,13 @@ class PacMan(pygame.sprite.Sprite):
         self.screen = screen
         self.radius = 5
         self.maze = maze
+        self.spawn_info = self.maze.player_spawn[1]
+        self.tile = self.maze.player_spawn[0]
         self.direction = None
-        self.speed = 5
+        self.speed = maze.block_size    # move one brick at a time
         self.image = pygame.Surface((self.radius * 2, self.radius * 2))
         self.rect = self.image.get_rect()
-        self.rect.centerx, self.rect.centery = self.maze.player_spawn
+        self.rect.centerx, self.rect.centery = self.spawn_info   # screen coordinates for spawn
         pygame.draw.circle(self.image, PacMan.PAC_YELLOW, (self.radius, self.radius), self.radius)
 
         # Keyboard related events/actions/releases
@@ -70,16 +72,21 @@ class PacMan(pygame.sprite.Sprite):
 
     def update(self):
         """Update PacMan's position in the maze if moving, and if not blocked"""
-        if self.direction:
+        if self.direction:  # TODO: convert direction to utilize tiles for AI
             if not self.is_blocked():
                 if self.direction == 'u':
-                    self.rect.top -= self.speed
+                    self.rect.centery -= self.speed
+                    self.tile = (self.tile[0] - 1, self.tile[1])
                 elif self.direction == 'l':
-                    self.rect.left -= self.speed
+                    self.rect.centerx -= self.speed
+                    self.tile = (self.tile[0], self.tile[1] - 1)
                 elif self.direction == 'd':
-                    self.rect.bottom += self.speed
+                    self.rect.centery += self.speed
+                    self.tile = (self.tile[0] + 1, self.tile[1])
                 elif self.direction == 'r':
-                    self.rect.right += self.speed
+                    self.rect.centerx += self.speed
+                    self.tile = (self.tile[0], self.tile[1] + 1)
+        # print(self.tile)
 
     def blit(self):
         """Blit the PacMan sprite to the screen"""

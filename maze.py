@@ -61,8 +61,8 @@ class Maze:
                                                           y_start + (y * self.block_size),
                                                           self.block_size // 2, self.block_size // 2))
                 elif co == 'o':
-                    self.player_spawn = (x_start + (x * self.block_size) + (self.block_size // 2),
-                                         y_start + (y * self.block_size) + (self.block_size // 2))
+                    self.player_spawn = [(i, j), (x_start + (x * self.block_size) + (self.block_size // 2),
+                                         y_start + (y * self.block_size) + (self.block_size // 2))]
                 elif co == 'g':
                     self.ghost_spawn.append(((i, j), (x_start + (x * self.block_size) + (self.block_size // 2),
                                             y_start + (y * self.block_size) + (self.block_size // 2))))
