@@ -1,16 +1,24 @@
 import pygame
+from spritesheet import extract_images
 
 
 class Ghost:
     """Represents the enemies of PacMan which chase him around the maze"""
-    def __init__(self, screen, maze, target, spawn_info):
+    def __init__(self, screen, maze, target, spawn_info, ghost_file='ghost-red.png'):
         self.screen = screen
         self.maze = maze
         self.internal_map = maze.map_lines
         self.target = target
-        self.width, self.height = self.maze.block_size, self.maze.block_size
-        self.image = pygame.Surface((self.height, self.width))
-        self.image.fill((255, 255, 255))
+        s_sheet = extract_images(ghost_file, [(0, 0, 31, 31), (0, 32, 31, 31)])
+        s_sheet = [pygame.transform.scale(img, (self.maze.block_size, self.maze.block_size)) for img in s_sheet]
+        eyes = extract_images('ghost-eyes.png', [(0, 0, 31, 31), (32, 0, 31, 31),
+                                                 (0, 32, 31, 31), (32, 32, 31, 31)])
+        eyes = [pygame.transform.scale(img, (self.maze.block_size, self.maze.block_size)) for img in eyes]
+        self.images = s_sheet
+        self.image = self.images[0].copy().convert()    # ensure same pixel format
+        self.curr_eye = eyes[0].copy().convert()
+        self.curr_eye.set_colorkey((0, 0, 0, 0))    # set colorkey for transparency
+        self.image.blit(self.curr_eye, (0, 0))
         self.rect = self.image.get_rect()
         self.rect.centerx, self.rect.centery = spawn_info[1]
         self.tile = spawn_info[0]

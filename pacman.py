@@ -11,20 +11,22 @@ class PacMan(pygame.sprite.Sprite):
         self.screen = screen
         self.radius = 5
         self.maze = maze
-        test = extract_images('pacman.png', [(0, 0, 31, 31), (32, 0, 31, 31), (0, 32, 31, 31), (32, 32, 32, 32)])
-        test = [pygame.transform.scale(img, (self.maze.block_size, self.maze.block_size)) for img in test]
-        print(test)
+        s_sheet = extract_images('pacman.png', [(0, 0, 191, 191), (192, 0, 191, 191),
+                                                (0, 192, 191, 191), (192, 192, 192, 192)])
+        s_sheet = [pygame.transform.scale(img, (self.maze.block_size, self.maze.block_size)) for img in s_sheet]
         self.spawn_info = self.maze.player_spawn[1]
         self.tile = self.maze.player_spawn[0]
         self.direction = None
         self.speed = maze.block_size / 4    # move one brick at a time
         # self.image = pygame.Surface((self.maze.block_size, self.maze.block_size), pygame.SRCALPHA, 32)
-        self.image = test[0]
-        self.image = pygame.Surface.convert_alpha(self.image)   # ensure the background is invisible
+        self.images = s_sheet
+        self.image_index = 0
+        self.image = s_sheet[self.image_index]
+        # self.image = pygame.Surface.convert_alpha(self.image)   # ensure the background is invisible
         self.rect = self.image.get_rect()
         self.rect.centerx, self.rect.centery = self.spawn_info   # screen coordinates for spawn
-        pygame.draw.circle(self.image, PacMan.PAC_YELLOW,
-                           (self.maze.block_size // 2, self.maze.block_size // 2), self.radius)
+        # pygame.draw.circle(self.image, PacMan.PAC_YELLOW,
+        #                    (self.maze.block_size // 2, self.maze.block_size // 2), self.radius)
 
         # Keyboard related events/actions/releases
         self.event_map = {pygame.KEYDOWN: self.change_direction, pygame.KEYUP: self.reset_direction}
@@ -88,6 +90,8 @@ class PacMan(pygame.sprite.Sprite):
     def update(self):
         """Update PacMan's position in the maze if moving, and if not blocked"""
         if self.direction:  # TODO: convert direction to utilize tiles for AI
+            self.image_index = (self.image_index + 1) % len(self.images)
+            self.image = self.images[self.image_index]
             if not self.is_blocked():
                 if self.direction == 'u':
                     self.rect.centery -= self.speed

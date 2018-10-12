@@ -40,9 +40,13 @@ class PacManPortalGame:
 
     def spawn_ghosts(self):
         """Create all ghosts at their starting positions"""
+        files = ['ghost-red.png', 'ghost-lblue.png', 'ghost-orange.png', 'ghost-pink.png']
+        idx = 0
         while len(self.maze.ghost_spawn) > 0:
             spawn_info = self.maze.ghost_spawn.pop()
-            self.ghosts.append(Ghost(screen=self.screen, maze=self.maze, target=self.player, spawn_info=spawn_info))
+            self.ghosts.append(Ghost(screen=self.screen, maze=self.maze, target=self.player,
+                                     spawn_info=spawn_info, ghost_file=files[idx]))
+            idx = (idx + 1) % len(files)
 
     def update_score(self):
         """Check if PacMan has eaten pellets that increase the score"""
