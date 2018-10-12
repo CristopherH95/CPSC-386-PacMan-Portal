@@ -8,7 +8,7 @@ class Ghost:
         self.maze = maze
         self.internal_map = maze.map_lines
         self.target = target
-        self.width, self.height = 10, 5
+        self.width, self.height = self.maze.block_size, self.maze.block_size
         self.image = pygame.Surface((self.height, self.width))
         self.image.fill((255, 255, 255))
         self.rect = self.image.get_rect()
@@ -22,10 +22,10 @@ class Ghost:
     def get_direction_options(self):
         """Check if the ghost is blocked by any maze barriers and return all directions possible to move in"""
         tests = {
-            'u': self.rect.move((0, -self.rect.height)),
-            'l': self.rect.move((-(self.rect.width * 2), 0)),
-            'd': self.rect.move((0, self.rect.height)),
-            'r': self.rect.move(((self.rect.width * 2), 0))
+            'u': self.rect.move((0, -self.speed)),
+            'l': self.rect.move((-self.speed, 0)),
+            'd': self.rect.move((0, self.speed)),
+            'r': self.rect.move((self.speed, 0))
         }
         remove = []
 

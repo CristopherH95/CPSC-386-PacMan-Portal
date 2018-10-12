@@ -14,7 +14,8 @@ class PacMan(pygame.sprite.Sprite):
         self.tile = self.maze.player_spawn[0]
         self.direction = None
         self.speed = maze.block_size / 4    # move one brick at a time
-        self.image = pygame.Surface((self.maze.block_size, self.maze.block_size))
+        self.image = pygame.Surface((self.maze.block_size, self.maze.block_size), pygame.SRCALPHA, 32)
+        self.image = pygame.Surface.convert_alpha(self.image)   # ensure the background is invisible
         self.rect = self.image.get_rect()
         self.rect.centerx, self.rect.centery = self.spawn_info   # screen coordinates for spawn
         pygame.draw.circle(self.image, PacMan.PAC_YELLOW,
