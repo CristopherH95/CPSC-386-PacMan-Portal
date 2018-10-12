@@ -16,9 +16,9 @@ class Maze:
         self.block_image.fill(Maze.NEON_BLUE)
         self.shield_image = pygame.Surface((self.block_size, self.block_size // 2))
         self.shield_image.fill(Maze.WHITE)
-        self.pellet_image = pygame.Surface((self.block_size // 2, self.block_size // 2))
+        self.pellet_image = pygame.Surface((self.block_size // 4, self.block_size // 4))
         pygame.draw.circle(self.pellet_image, Maze.WHITE,
-                           (self.block_size // 4, self.block_size // 4), self.block_size // 4)
+                           (self.block_size // 8, self.block_size // 8), self.block_size // 8)
         self.fruit_image = pygame.image.load('images/cherry.png')
         self.fruit_image = pygame.transform.scale(self.fruit_image, (self.block_size // 2, self.block_size // 2))
         with open(self.map_file, 'r') as file:
@@ -49,8 +49,8 @@ class Maze:
                                                         self.block_size, self.block_size))
                 elif co == '*':
                     if randrange(0, 100) > 1:
-                        self.pellets.append(pygame.Rect(x_start + (self.block_size // 4) + (x * self.block_size),
-                                                        y_start + (self.block_size // 4) + (y * self.block_size),
+                        self.pellets.append(pygame.Rect(x_start + (self.block_size // 3) + (x * self.block_size),
+                                                        y_start + (self.block_size // 3) + (y * self.block_size),
                                                         self.block_size, self.block_size))
                     else:
                         self.fruits.append(pygame.Rect(x_start + (self.block_size // 4) + (x * self.block_size),

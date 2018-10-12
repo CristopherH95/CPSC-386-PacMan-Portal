@@ -1,4 +1,5 @@
 import pygame
+from spritesheet import extract_images
 
 
 class PacMan(pygame.sprite.Sprite):
@@ -10,11 +11,15 @@ class PacMan(pygame.sprite.Sprite):
         self.screen = screen
         self.radius = 5
         self.maze = maze
+        test = extract_images('pacman.png', [(0, 0, 31, 31), (32, 0, 31, 31), (0, 32, 31, 31), (32, 32, 32, 32)])
+        test = [pygame.transform.scale(img, (self.maze.block_size, self.maze.block_size)) for img in test]
+        print(test)
         self.spawn_info = self.maze.player_spawn[1]
         self.tile = self.maze.player_spawn[0]
         self.direction = None
         self.speed = maze.block_size / 4    # move one brick at a time
-        self.image = pygame.Surface((self.maze.block_size, self.maze.block_size), pygame.SRCALPHA, 32)
+        # self.image = pygame.Surface((self.maze.block_size, self.maze.block_size), pygame.SRCALPHA, 32)
+        self.image = test[0]
         self.image = pygame.Surface.convert_alpha(self.image)   # ensure the background is invisible
         self.rect = self.image.get_rect()
         self.rect.centerx, self.rect.centery = self.spawn_info   # screen coordinates for spawn
