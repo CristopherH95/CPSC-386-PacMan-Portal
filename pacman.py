@@ -101,6 +101,7 @@ class PacMan(pygame.sprite.Sprite):
     def eat(self):
         """Eat pellets from the maze and return the score accumulated"""
         score = 0
+        fruit_count = 0
         pellets_left = []
         fruit_left = []
         for pellet in self.maze.pellets:
@@ -113,6 +114,7 @@ class PacMan(pygame.sprite.Sprite):
                 fruit_left.append(fruit)
             else:
                 score += 20
+                fruit_count += 1
         self.maze.pellets = pellets_left
         self.maze.fruits = fruit_left
-        return score
+        return score, fruit_count
