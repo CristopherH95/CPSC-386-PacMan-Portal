@@ -14,10 +14,11 @@ class PacMan(pygame.sprite.Sprite):
         self.tile = self.maze.player_spawn[0]
         self.direction = None
         self.speed = maze.block_size / 4    # move one brick at a time
-        self.image = pygame.Surface((self.radius * 2, self.radius * 2))
+        self.image = pygame.Surface((self.maze.block_size, self.maze.block_size))
         self.rect = self.image.get_rect()
         self.rect.centerx, self.rect.centery = self.spawn_info   # screen coordinates for spawn
-        pygame.draw.circle(self.image, PacMan.PAC_YELLOW, (self.radius, self.radius), self.radius)
+        pygame.draw.circle(self.image, PacMan.PAC_YELLOW,
+                           (self.maze.block_size // 2, self.maze.block_size // 2), self.radius)
 
         # Keyboard related events/actions/releases
         self.event_map = {pygame.KEYDOWN: self.change_direction, pygame.KEYUP: self.reset_direction}
@@ -62,13 +63,13 @@ class PacMan(pygame.sprite.Sprite):
         """Check if PacMan is blocked by any maze barriers, return True if blocked, False if clear"""
         if self.direction is not None:
             if self.direction == 'u':
-                test = self.rect.move((0, -(self.maze.block_size // 2)))
+                test = self.rect.move((0, -self.speed))
             elif self.direction == 'l':
-                test = self.rect.move((-(self.maze.block_size // 2), 0))
+                test = self.rect.move((-self.speed, 0))
             elif self.direction == 'd':
-                test = self.rect.move((0, (self.maze.block_size // 2)))
+                test = self.rect.move((0, self.speed))
             else:
-                test = self.rect.move(((self.maze.block_size // 2), 0))
+                test = self.rect.move((self.speed, 0))
 
             for wall in self.maze.maze_blocks:
                 if wall.colliderect(test):
