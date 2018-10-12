@@ -1,5 +1,5 @@
 import pygame
-from spritesheet import extract_images
+from image_manager import ImageManager
 
 
 class PacMan(pygame.sprite.Sprite):
@@ -11,22 +11,19 @@ class PacMan(pygame.sprite.Sprite):
         self.screen = screen
         self.radius = 5
         self.maze = maze
-        s_sheet = extract_images('pacman.png', [(0, 0, 191, 191), (192, 0, 191, 191),
-                                                (0, 192, 191, 191), (192, 192, 192, 192)])
-        s_sheet = [pygame.transform.scale(img, (self.maze.block_size, self.maze.block_size)) for img in s_sheet]
+        self.norm_images = ImageManager('pacman.png', sheet=True, pos_offsets=[(0, 0, 191, 191),
+                                                                               (192, 0, 191, 191),
+                                                                               (0, 192, 191, 191),
+                                                                               (192, 192, 192, 192)],
+                                        resize=(self.maze.block_size, self.maze.block_size),
+                                        animation_delay=250)
+        # FIXME: Redo pacman images so they are each 32x32
         self.spawn_info = self.maze.player_spawn[1]
         self.tile = self.maze.player_spawn[0]
         self.direction = None
-        self.speed = maze.block_size / 4    # move one brick at a time
-        # self.image = pygame.Surface((self.maze.block_size, self.maze.block_size), pygame.SRCALPHA, 32)
-        self.images = s_sheet
-        self.image_index = 0
-        self.image = s_sheet[self.image_index]
-        # self.image = pygame.Surface.convert_alpha(self.image)   # ensure the background is invisible
-        self.rect = self.image.get_rect()
+        self.speed = maze.block_size / 4
+        self.image, self.rect = self.norm_images.get_image()
         self.rect.centerx, self.rect.centery = self.spawn_info   # screen coordinates for spawn
-        # pygame.draw.circle(self.image, PacMan.PAC_YELLOW,
-        #                    (self.maze.block_size // 2, self.maze.block_size // 2), self.radius)
 
         # Keyboard related events/actions/releases
         self.event_map = {pygame.KEYDOWN: self.change_direction, pygame.KEYUP: self.reset_direction}
@@ -69,7 +66,9 @@ class PacMan(pygame.sprite.Sprite):
 
     def is_blocked(self):
         """Check if PacMan is blocked by any maze barriers, return True if blocked, False if clear"""
+        result = False
         if self.direction is not None:
+            original_pos = self.rect
             if self.direction == 'u':
                 test = self.rect.move((0, -self.speed))
             elif self.direction == 'l':
@@ -78,20 +77,20 @@ class PacMan(pygame.sprite.Sprite):
                 test = self.rect.move((0, self.speed))
             else:
                 test = self.rect.move((self.speed, 0))
+            self.rect = test    # temporarily move self
 
-            for wall in self.maze.maze_blocks:
-                if wall.colliderect(test):
-                    return True
-            for wall in self.maze.shield_blocks:
-                if wall.colliderect(test):
-                    return True
-        return False
+            # if any collision, result = True
+            if pygame.sprite.spritecollideany(self, self.maze.maze_blocks):
+                result = True
+            elif pygame.sprite.spritecollideany(self, self.maze.shield_blocks):
+                result = True
+            self.rect = original_pos    # reset position
+        return result
 
     def update(self):
         """Update PacMan's position in the maze if moving, and if not blocked"""
         if self.direction:  # TODO: convert direction to utilize tiles for AI
-            self.image_index = (self.image_index + 1) % len(self.images)
-            self.image = self.images[self.image_index]
+            self.image = self.norm_images.next_image()
             if not self.is_blocked():
                 if self.direction == 'u':
                     self.rect.centery -= self.speed
@@ -111,19 +110,13 @@ class PacMan(pygame.sprite.Sprite):
         """Eat pellets from the maze and return the score accumulated"""
         score = 0
         fruit_count = 0
-        pellets_left = []
-        fruit_left = []
-        for pellet in self.maze.pellets:
-            if not pellet.colliderect(self.rect):
-                pellets_left.append(pellet)
-            else:
-                score += 10
-        for fruit in self.maze.fruits:
-            if not fruit.colliderect(self.rect):
-                fruit_left.append(fruit)
-            else:
-                score += 20
-                fruit_count += 1
-        self.maze.pellets = pellets_left
-        self.maze.fruits = fruit_left
+        collision = pygame.sprite.spritecollideany(self, self.maze.pellets)
+        if collision:
+            collision.kill()
+            score += 10
+        collision = pygame.sprite.spritecollideany(self, self.maze.fruits)
+        if collision:
+            collision.kill()
+            score += 20
+            fruit_count += 1
         return score, fruit_count

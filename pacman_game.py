@@ -28,7 +28,7 @@ class PacManPortalGame:
                                                      self.screen.get_height() * 0.95))
         self.maze = Maze(screen=self.screen, maze_map_file='maze_map.txt')
         self.player = PacMan(screen=self.screen, maze=self.maze)
-        self.ghosts = []
+        self.ghosts = pygame.sprite.Group()
         self.spawn_ghosts()
         self.actions = {PacManPortalGame.START_EVENT: self.init_ghosts}
 
@@ -44,8 +44,8 @@ class PacManPortalGame:
         idx = 0
         while len(self.maze.ghost_spawn) > 0:
             spawn_info = self.maze.ghost_spawn.pop()
-            self.ghosts.append(Ghost(screen=self.screen, maze=self.maze, target=self.player,
-                                     spawn_info=spawn_info, ghost_file=files[idx]))
+            self.ghosts.add(Ghost(screen=self.screen, maze=self.maze, target=self.player,
+                                  spawn_info=spawn_info, ghost_file=files[idx]))
             idx = (idx + 1) % len(files)
 
     def update_score(self):
@@ -58,8 +58,8 @@ class PacManPortalGame:
         self.screen.fill(PacManPortalGame.BLACK_BG)
         self.update_score()
         self.maze.blit()
+        self.ghosts.update()
         for g in self.ghosts:
-            g.update()
             g.blit()
         self.player.update()
         self.player.blit()
