@@ -3,7 +3,7 @@ from event_loop import EventLoop
 from ghost import Ghost
 from maze import Maze
 from pacman import PacMan
-from scoreboard import ScoreBoard
+from score import ScoreController
 
 
 class PacManPortalGame:
@@ -20,12 +20,15 @@ class PacManPortalGame:
         )
         pygame.display.set_caption('PacMan Portal')
         self.clock = pygame.time.Clock()
-        self.scoreboard = ScoreBoard(screen=self.screen,
-                                     pos=((self.screen.get_width() // 5),
-                                          (self.screen.get_height() * 0.95)))
+        self.score_keeper = ScoreController(screen=self.screen,
+                                            sb_pos=((self.screen.get_width() // 5),
+                                                    (self.screen.get_height() * 0.95)),
+                                            items_image='cherry.png',
+                                            itc_pos=(int(self.screen.get_width() * 0.6),
+                                                     self.screen.get_height() * 0.95))
         self.maze = Maze(screen=self.screen, maze_map_file='maze_map.txt')
         self.player = PacMan(screen=self.screen, maze=self.maze)
-        self.ghosts = []
+        self.ghosts = pygame.sprite.Group()
         self.spawn_ghosts()
         self.actions = {PacManPortalGame.START_EVENT: self.init_ghosts}
 
@@ -37,26 +40,30 @@ class PacManPortalGame:
 
     def spawn_ghosts(self):
         """Create all ghosts at their starting positions"""
+        files = ['ghost-red.png', 'ghost-lblue.png', 'ghost-orange.png', 'ghost-pink.png']
+        idx = 0
         while len(self.maze.ghost_spawn) > 0:
             spawn_info = self.maze.ghost_spawn.pop()
-            self.ghosts.append(Ghost(screen=self.screen, maze=self.maze, target=self.player, spawn_info=spawn_info))
+            self.ghosts.add(Ghost(screen=self.screen, maze=self.maze, target=self.player,
+                                  spawn_info=spawn_info, ghost_file=files[idx]))
+            idx = (idx + 1) % len(files)
 
     def update_score(self):
         """Check if PacMan has eaten pellets that increase the score"""
-        n_score = self.player.eat()
-        self.scoreboard.update(n_score)
+        n_score, n_fruits = self.player.eat()
+        self.score_keeper.add_score(score=n_score, items=n_fruits if n_fruits > 0 else None)
 
     def update_screen(self):
         """Update the game screen"""
         self.screen.fill(PacManPortalGame.BLACK_BG)
         self.update_score()
         self.maze.blit()
+        self.ghosts.update()
         for g in self.ghosts:
-            g.update()
             g.blit()
         self.player.update()
         self.player.blit()
-        self.scoreboard.blit()
+        self.score_keeper.blit()
         pygame.display.flip()
 
     def run_game(self):
