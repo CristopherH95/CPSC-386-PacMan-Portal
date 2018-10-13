@@ -6,7 +6,8 @@ class ImageManager:
     def __init__(self, img, sheet=False, pos_offsets=None,
                  resize=None, keys=None,
                  convert=True, transparency=True,
-                 animation_delay=None):
+                 animation_delay=None, reversible=False,
+                 repeat=True):
         if not sheet:
             self.images = [pygame.image.load('images/' + img)]  # single image
         else:
@@ -32,6 +33,15 @@ class ImageManager:
             self.image_index = 0
         self.animation_delay = animation_delay
         self.time_stamp = pygame.time.get_ticks()
+        self.reversible = reversible
+        self.repeat = repeat
+
+    def flip(self, x_bool=True, y_bool=False):
+        """Flip images in the y, x, or both directions"""
+        if isinstance(self.images, dict):
+            self.images = {v: pygame.transform.flip(v, x_bool, y_bool) for k, v in self.images.items()}
+        else:
+            self.images = [pygame.transform.flip(x, x_bool, y_bool) for x in self.images]
 
     def get_image(self, key=None):
         """Returns image information that is useful for displaying the image"""
@@ -50,12 +60,17 @@ class ImageManager:
         """Iterates the image manager to the next image it has stored"""
         if not isinstance(self.images, list):
             raise ValueError('next_image not callable when using keys')
+        if not self.repeat and self.image_index + 1 >= len(self.images):
+            return self.images[self.image_index]
+        if self.reversible and self.image_index + 1 >= len(self.images):
+            self.images.reverse()
         if not self.animation_delay:
             self.image_index = (self.image_index + 1) % len(self.images)
         else:
             if abs(self.time_stamp - pygame.time.get_ticks()) > self.animation_delay:
                 self.image_index = (self.image_index + 1) % len(self.images)
                 self.time_stamp = pygame.time.get_ticks()
+
         return self.images[self.image_index]
 
     def extract_images(self):

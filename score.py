@@ -11,7 +11,7 @@ class ScoreBoard:
         self.screen = screen
         self.score = 0
         self.color = ScoreBoard.SCORE_WHITE
-        self.font = pygame.sysfont.SysFont(None, 36)
+        self.font = pygame.font.Font('fonts/LuckiestGuy-Regular.ttf', 36)
         self.image = None
         self.rect = None
         self.prep_image()
@@ -46,7 +46,7 @@ class ItemCounter:
         self.counter = 0
         self.item_image = pygame.image.load('images/' + image_name)
         self.item_rect = self.item_image.get_rect()
-        self.font = pygame.sysfont.SysFont(None, 36)
+        self.font = pygame.font.Font('fonts/LuckiestGuy-Regular.ttf', 36)
         self.color = ScoreBoard.SCORE_WHITE
         self.text_image = None
         self.text_rect = None
@@ -68,7 +68,7 @@ class ItemCounter:
     def position(self):
         """Resets the position of the item counter to its stored position"""
         self.text_rect.centerx, self.text_rect.centery = self.pos
-        x_offset = int(self.text_rect.width * 1.5)
+        x_offset = int(self.text_rect.width * 1.25)
         self.item_rect.centerx, self.item_rect.centery = self.pos[0] + x_offset, self.pos[1]
 
     def blit(self):
@@ -84,6 +84,7 @@ class ScoreController:
         self.high_scores = []
         self.scoreboard = ScoreBoard(screen=screen, pos=sb_pos)
         self.item_counter = ItemCounter(screen=screen, pos=itc_pos, image_name=items_image)
+        self.init_high_scores()
 
     def add_score(self, score, items=None):
         """Add new score and prepare for scoreboard display"""

@@ -1,5 +1,6 @@
 import pygame
 from image_manager import ImageManager
+from portal import PortalController
 
 
 class PacMan(pygame.sprite.Sprite):
@@ -9,52 +10,119 @@ class PacMan(pygame.sprite.Sprite):
     def __init__(self, screen, maze):
         super().__init__()
         self.screen = screen
-        self.radius = 5
+        self.radius = maze.block_size // 5
         self.maze = maze
-        self.norm_images = ImageManager('pacman.png', sheet=True, pos_offsets=[(0, 0, 191, 191),
-                                                                               (192, 0, 191, 191),
-                                                                               (0, 192, 191, 191),
-                                                                               (192, 192, 192, 192)],
-                                        resize=(self.maze.block_size, self.maze.block_size),
-                                        animation_delay=250)
-        # FIXME: Redo pacman images so they are each 32x32
+        self.horizontal_images = ImageManager('pacman-horiz.png', sheet=True, pos_offsets=[(0, 0, 32, 32),
+                                                                                           (32, 0, 32, 32),
+                                                                                           (0, 32, 32, 32),
+                                                                                           (32, 32, 32, 32),
+                                                                                           (0, 64, 32, 32)],
+                                              resize=(self.maze.block_size, self.maze.block_size),
+                                              reversible=True)
+        self.vertical_images = ImageManager('pacman-vert.png', sheet=True, pos_offsets=[(0, 0, 32, 32),
+                                                                                        (32, 0, 32, 32),
+                                                                                        (0, 32, 32, 32),
+                                                                                        (32, 32, 32, 32),
+                                                                                        (0, 64, 32, 32)],
+                                            resize=(self.maze.block_size, self.maze.block_size),
+                                            reversible=True)
+        self.death_images = ImageManager('pacman-death.png', sheet=True, pos_offsets=[(0, 0, 32, 32),
+                                                                                      (32, 0, 32, 32),
+                                                                                      (0, 32, 32, 32),
+                                                                                      (32, 32, 32, 32),
+                                                                                      (0, 64, 32, 32),
+                                                                                      (32, 64, 32, 32)],
+                                         resize=(self.maze.block_size, self.maze.block_size),
+                                         animation_delay=150, repeat=False)
+        self.flip_status = {'use_horiz': True, 'h_flip': False, 'v_flip': False}
         self.spawn_info = self.maze.player_spawn[1]
         self.tile = self.maze.player_spawn[0]
         self.direction = None
-        self.speed = maze.block_size / 4
-        self.image, self.rect = self.norm_images.get_image()
+        self.moving = False
+        self.speed = maze.block_size // 7
+        self.image, self.rect = self.horizontal_images.get_image()
         self.rect.centerx, self.rect.centery = self.spawn_info   # screen coordinates for spawn
+        self.dead = False
+        self.portal_controller = PortalController(screen, self, maze)   # controller object for portal
 
         # Keyboard related events/actions/releases
-        self.event_map = {pygame.KEYDOWN: self.change_direction, pygame.KEYUP: self.reset_direction}
+        self.event_map = {pygame.KEYDOWN: self.perform_action, pygame.KEYUP: self.reset_direction}
         self.action_map = {pygame.K_UP: self.set_move_up, pygame.K_LEFT: self.set_move_left,
-                           pygame.K_DOWN: self.set_move_down, pygame.K_RIGHT: self.set_move_right}
+                           pygame.K_DOWN: self.set_move_down, pygame.K_RIGHT: self.set_move_right,
+                           pygame.K_q: self.blue_portal, pygame.K_w: self.orange_portal}
+
+    def blue_portal(self):
+        """Create a blue portal from PacMan"""
+        self.portal_controller.fire_b_portal_projectile()
+
+    def orange_portal(self):
+        """Create an orange portal from PacMan"""
+        self.portal_controller.fire_o_portal_projectile()
+
+    def set_death(self):
+        """Set the death flag for PacMan and begin the death animation"""
+        self.dead = True
+        self.image, _ = self.death_images.get_image()
+
+    def revive(self):
+        """Set dead to False and give PacMan a default image"""
+        self.dead = False
+        self.image, _ = self.horizontal_images.get_image()
+        self.death_images.image_index = 0
+
+    def reset_position(self):
+        """Reset position back to pre-define spawn location"""
+        self.rect.centerx, self.rect.centery = self.spawn_info  # screen coordinates for spawn
 
     def reset_direction(self, event):
         """Reset the movement direction if key-up on movement keys"""
         if event.key in (pygame.K_UP, pygame.K_DOWN, pygame.K_LEFT, pygame.K_RIGHT):
-            self.direction = None
+            self.moving = False
 
-    def change_direction(self, event):
+    def perform_action(self, event):
         """Change direction based on the event key"""
         if event.key in self.action_map:
             self.action_map[event.key]()
 
     def set_move_up(self):
         """Set move direction up"""
-        self.direction = 'u'
+        if self.direction != 'u':
+            self.direction = 'u'
+            if self.flip_status['v_flip']:
+                self.vertical_images.flip(False, True)
+                self.flip_status['v_flip'] = False
+            self.flip_status['use_horiz'] = False
+        self.moving = True
 
     def set_move_left(self):
         """Set move direction left"""
-        self.direction = 'l'
+        if self.direction != 'l':
+            self.direction = 'l'
+            if not self.flip_status['h_flip']:
+                self.horizontal_images.flip()
+                self.flip_status['h_flip'] = True
+            self.flip_status['use_horiz'] = True
+        self.moving = True
 
     def set_move_down(self):
         """Set move direction down"""
-        self.direction = 'd'
+        if self.direction != 'd':
+            self.direction = 'd'
+            if not self.flip_status['v_flip']:
+                self.vertical_images.flip(x_bool=False, y_bool=True)
+                self.flip_status['v_flip'] = True
+            self.flip_status['use_horiz'] = False
+        self.moving = True
 
     def set_move_right(self):
         """Set move direction to right"""
-        self.direction = 'r'
+        if self.direction != 'r':
+            self.direction = 'r'
+            if self.flip_status['h_flip']:
+                self.horizontal_images.flip()
+                self.flip_status['h_flip'] = False
+            self.flip_status['use_horiz'] = True
+        self.moving = True
 
     def get_nearest_col(self):
         """Get the current column location on the maze map"""
@@ -67,7 +135,7 @@ class PacMan(pygame.sprite.Sprite):
     def is_blocked(self):
         """Check if PacMan is blocked by any maze barriers, return True if blocked, False if clear"""
         result = False
-        if self.direction is not None:
+        if self.direction is not None and self.moving:
             original_pos = self.rect
             if self.direction == 'u':
                 test = self.rect.move((0, -self.speed))
@@ -84,32 +152,44 @@ class PacMan(pygame.sprite.Sprite):
                 result = True
             elif pygame.sprite.spritecollideany(self, self.maze.shield_blocks):
                 result = True
+            elif not self.portal_controller.portables_usable():
+                result = self.portal_controller.collide_portals(self)
             self.rect = original_pos    # reset position
         return result
 
     def update(self):
         """Update PacMan's position in the maze if moving, and if not blocked"""
-        if self.direction:  # TODO: convert direction to utilize tiles for AI
-            self.image = self.norm_images.next_image()
-            if not self.is_blocked():
-                if self.direction == 'u':
-                    self.rect.centery -= self.speed
-                elif self.direction == 'l':
-                    self.rect.centerx -= self.speed
-                elif self.direction == 'd':
-                    self.rect.centery += self.speed
-                elif self.direction == 'r':
-                    self.rect.centerx += self.speed
-            self.tile = (self.get_nearest_row(), self.get_nearest_col())
+        if not self.dead:
+            self.portal_controller.update()
+            self.portal_controller.check_portals(self)
+            if self.direction and self.moving:
+                if self.flip_status['use_horiz']:
+                    self.image = self.horizontal_images.next_image()
+                else:
+                    self.image = self.vertical_images.next_image()
+                if not self.is_blocked():
+                    if self.direction == 'u':
+                        self.rect.centery -= self.speed
+                    elif self.direction == 'l':
+                        self.rect.centerx -= self.speed
+                    elif self.direction == 'd':
+                        self.rect.centery += self.speed
+                    elif self.direction == 'r':
+                        self.rect.centerx += self.speed
+                self.tile = (self.get_nearest_row(), self.get_nearest_col())
+        else:
+            self.image = self.death_images.next_image()
 
     def blit(self):
         """Blit the PacMan sprite to the screen"""
+        self.portal_controller.blit()
         self.screen.blit(self.image, self.rect)
 
     def eat(self):
         """Eat pellets from the maze and return the score accumulated"""
         score = 0
         fruit_count = 0
+        power = None
         collision = pygame.sprite.spritecollideany(self, self.maze.pellets)
         if collision:
             collision.kill()
@@ -119,4 +199,9 @@ class PacMan(pygame.sprite.Sprite):
             collision.kill()
             score += 20
             fruit_count += 1
-        return score, fruit_count
+        collision = pygame.sprite.spritecollideany(self, self.maze.power_pellets)
+        if collision:
+            collision.kill()
+            score += 20
+            power = True
+        return score, fruit_count, power

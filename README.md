@@ -18,3 +18,5 @@ NOTES:
 
 This game requires read and write access to the file system. It will need to read asset files to display images and play sounds.
 It will need write access to dump the high score into a file for future play sessions.
+
+Custom font used is LuckiestGuy-Regular by 'Astigmatic' found here: https://fonts.google.com/specimen/Luckiest+Guy
