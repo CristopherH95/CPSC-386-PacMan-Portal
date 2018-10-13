@@ -5,6 +5,7 @@ from maze import Maze
 from pacman import PacMan
 from lives_status import PacManCounter
 from score import ScoreController
+from menu import Menu, HighScoreScreen
 
 
 class PacManPortalGame:
@@ -97,7 +98,28 @@ class PacManPortalGame:
         self.life_counter.blit()
         pygame.display.flip()
 
-    def run_game(self):
+    def run(self):
+        """Run the game application, starting from the menu"""
+        menu = Menu(self.screen)
+        hs_screen = HighScoreScreen(self.screen, self.score_keeper)
+        e_loop = EventLoop(loop_running=True, actions={pygame.MOUSEBUTTONDOWN: menu.check_buttons})
+
+        while e_loop.loop_running:
+            e_loop.check_events()
+            self.screen.fill(PacManPortalGame.BLACK_BG)
+            if not menu.hs_screen:
+                menu.update()
+                menu.blit()
+            else:
+                hs_screen.blit()
+                hs_screen.check_done()
+            if menu.ready_to_play:
+                self.play_game()
+                menu.ready_to_play = False
+                self.score_keeper.save_high_scores()
+            pygame.display.flip()
+
+    def play_game(self):
         """Run the game's event loop, using an EventLoop object"""
         e_loop = EventLoop(loop_running=True, actions={**self.player.event_map, **self.actions})
         pygame.time.set_timer(PacManPortalGame.START_EVENT, 5000)  # Signal game start in 5 seconds
@@ -106,8 +128,10 @@ class PacManPortalGame:
             self.clock.tick(60)  # 60 fps limit
             e_loop.check_events()
             self.update_screen()
+            if self.life_counter.lives <= 0:
+                e_loop.loop_running = False
 
 
 if __name__ == '__main__':
     game = PacManPortalGame()
-    game.run_game()
+    game.run()

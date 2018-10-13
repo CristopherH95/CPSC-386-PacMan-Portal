@@ -56,6 +56,7 @@ class PacMan(pygame.sprite.Sprite):
         """Set dead to False and give PacMan a default image"""
         self.dead = False
         self.image, _ = self.horizontal_images.get_image()
+        self.death_images.image_index = 0
 
     def reset_position(self):
         """Reset position back to pre-define spawn location"""

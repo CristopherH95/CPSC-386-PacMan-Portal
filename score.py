@@ -84,6 +84,7 @@ class ScoreController:
         self.high_scores = []
         self.scoreboard = ScoreBoard(screen=screen, pos=sb_pos)
         self.item_counter = ItemCounter(screen=screen, pos=itc_pos, image_name=items_image)
+        self.init_high_scores()
 
     def add_score(self, score, items=None):
         """Add new score and prepare for scoreboard display"""
