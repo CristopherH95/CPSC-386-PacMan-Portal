@@ -152,6 +152,8 @@ class PacMan(pygame.sprite.Sprite):
                 result = True
             elif pygame.sprite.spritecollideany(self, self.maze.shield_blocks):
                 result = True
+            elif not self.portal_controller.portables_usable():
+                result = self.portal_controller.collide_portals(self)
             self.rect = original_pos    # reset position
         return result
 

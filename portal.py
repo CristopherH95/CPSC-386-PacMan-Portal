@@ -1,5 +1,6 @@
 import pygame
 from maze import Block
+from image_manager import ImageManager
 
 
 class Portal(Block):
@@ -16,11 +17,27 @@ class Portal(Block):
         self.direction = direction
         self.p_type = p_type
         if p_type == Portal.P_TYPE_1:
-            image = pygame.Surface((self.maze.block_size, self.maze.block_size))
-            image.fill(Portal.TYPE_1_COLOR)   # blue
+            self.image_manager = ImageManager('blue-portal-bg.png', sheet=True, pos_offsets=[(0, 0, 32, 32),
+                                                                                          (32, 0, 32, 32),
+                                                                                          (64, 0, 32, 32),
+                                                                                          (0, 32, 32, 32),
+                                                                                          (32, 32, 32, 32),
+                                                                                          (64, 32, 32, 32),
+                                                                                          (0, 64, 32, 32)],
+                                              resize=(self.maze.block_size, self.maze.block_size),
+                                              animation_delay=250)
+            image, _ = self.image_manager.get_image()
         else:
-            image = pygame.Surface((self.maze.block_size, self.maze.block_size))
-            image.fill(Portal.TYPE_2_COLOR)   # orange
+            self.image_manager = ImageManager('orange-portal-bg.png', sheet=True, pos_offsets=[(0, 0, 32, 32),
+                                                                                            (32, 0, 32, 32),
+                                                                                            (64, 0, 32, 32),
+                                                                                            (0, 32, 32, 32),
+                                                                                            (32, 32, 32, 32),
+                                                                                            (64, 32, 32, 32),
+                                                                                            (0, 64, 32, 32)],
+                                              resize=(self.maze.block_size, self.maze.block_size),
+                                              animation_delay=250)
+            image, _ = self.image_manager.get_image()
         super().__init__(x, y, maze.block_size, maze.block_size, image)
 
     def get_nearest_col(self):
@@ -30,6 +47,10 @@ class Portal(Block):
     def get_nearest_row(self):
         """Get the current row location on the maze map"""
         return (self.rect.y - (self.screen.get_height() // 12)) // self.maze.block_size
+
+    def update(self):
+        """Update the portal animations"""
+        self.image = self.image_manager.next_image()
 
     def blit(self):
         """Blit the portal to the screen"""
@@ -126,6 +147,8 @@ class PortalController:
 
     def update(self):
         """Update the portal controller's display parts and tracking"""
+        self.blue_portal.update()
+        self.orange_portal.update()
         if self.blue_projectile:
             self.blue_projectile.update()   # update projectile
             # erase projectile if it hits a portal
@@ -154,6 +177,15 @@ class PortalController:
                 direction = self.portal_directions[self.orange_projectile.direction]
                 self.orange_projectile = None   # remove the projectile
                 self.create_orange_portal(x, y, direction)
+
+    def portables_usable(self):
+        """Return True if the portables are usable (i.e. there are two of them)"""
+        return self.blue_portal and self.orange_portal
+
+    def collide_portals(self, other):
+        """Return True if the sprite is colliding with any portal"""
+        return pygame.sprite.spritecollideany(other, self.blue_portal) or \
+            pygame.sprite.spritecollideany(other, self.orange_portal)
 
     def check_portals(self, *args):
         """Check if other sprites have come into contact with the portals, and if so move them"""
