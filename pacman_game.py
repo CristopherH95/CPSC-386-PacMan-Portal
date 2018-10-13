@@ -6,6 +6,7 @@ from pacman import PacMan
 from lives_status import PacManCounter
 from score import ScoreController
 from menu import Menu, HighScoreScreen
+from intro import Intro
 
 
 class PacManPortalGame:
@@ -106,12 +107,15 @@ class PacManPortalGame:
         """Run the game application, starting from the menu"""
         menu = Menu(self.screen)
         hs_screen = HighScoreScreen(self.screen, self.score_keeper)
+        intro_seq = Intro(self.screen)
         e_loop = EventLoop(loop_running=True, actions={pygame.MOUSEBUTTONDOWN: menu.check_buttons})
 
         while e_loop.loop_running:
             e_loop.check_events()
             self.screen.fill(PacManPortalGame.BLACK_BG)
             if not menu.hs_screen:
+                intro_seq.update()
+                intro_seq.blit()
                 menu.update()
                 menu.blit()
             else:
