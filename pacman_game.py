@@ -33,6 +33,7 @@ class PacManPortalGame:
         self.life_counter = PacManCounter(screen=self.screen, ct_pos=((self.screen.get_width() // 3),
                                                                       (self.screen.get_height() * 0.965)),
                                           images_size=(self.maze.block_size, self.maze.block_size))
+        self.game_over = True
         self.player = PacMan(screen=self.screen, maze=self.maze)
         self.ghosts = pygame.sprite.Group()
         self.first_ghost = None
@@ -63,14 +64,17 @@ class PacManPortalGame:
 
     def rebuild_maze(self):
         """Resets the maze to its initial state"""
-        self.maze.build_maze()
-        self.player.reset_position()
-        for g in self.ghosts:
-            g.reset_position()
-        if self.player.dead:
-            self.player.revive()
-        self.first_ghost.enable()
-        pygame.time.set_timer(PacManPortalGame.START_EVENT, 5000)  # Signal game start in 5 seconds
+        if self.life_counter.lives > 0:
+            self.maze.build_maze()
+            self.player.reset_position()
+            for g in self.ghosts:
+                g.reset_position()
+            if self.player.dead:
+                self.player.revive()
+            self.first_ghost.enable()
+            pygame.time.set_timer(PacManPortalGame.START_EVENT, 5000)  # Signal game start in 5 seconds
+        else:
+            self.game_over = True
         pygame.time.set_timer(PacManPortalGame.REBUILD_EVENT, 0)    # disable timer repeat
 
     def check_player(self):
@@ -123,12 +127,13 @@ class PacManPortalGame:
         """Run the game's event loop, using an EventLoop object"""
         e_loop = EventLoop(loop_running=True, actions={**self.player.event_map, **self.actions})
         pygame.time.set_timer(PacManPortalGame.START_EVENT, 5000)  # Signal game start in 5 seconds
+        self.game_over = False
 
         while e_loop.loop_running:
             self.clock.tick(60)  # 60 fps limit
             e_loop.check_events()
             self.update_screen()
-            if self.life_counter.lives <= 0:
+            if self.game_over:
                 e_loop.loop_running = False
 
 
