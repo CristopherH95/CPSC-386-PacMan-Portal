@@ -80,9 +80,16 @@ class PacManPortalGame:
 
     def check_player(self):
         """Check the player to see if they have been hit by an enemy, or if they have consumed pellets/fruit"""
-        n_score, n_fruits = self.player.eat()
+        n_score, n_fruits, power = self.player.eat()
         self.score_keeper.add_score(score=n_score, items=n_fruits if n_fruits > 0 else None)
-        if pygame.sprite.spritecollideany(self.player, self.ghosts) and not self.player.dead:
+        if power:
+            for g in self.ghosts:
+                g.begin_blue_state()
+        ghost_collide = pygame.sprite.spritecollideany(self.player, self.ghosts)
+        if ghost_collide and ghost_collide.state['blue']:
+            ghost_collide.set_eaten()
+            self.score_keeper.add_score(200)
+        elif ghost_collide and not (self.player.dead or ghost_collide.state['return']):
             self.life_counter.decrement()
             self.player.set_death()
             for g in self.ghosts:

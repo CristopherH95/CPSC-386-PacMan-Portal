@@ -168,6 +168,7 @@ class PacMan(pygame.sprite.Sprite):
         """Eat pellets from the maze and return the score accumulated"""
         score = 0
         fruit_count = 0
+        power = None
         collision = pygame.sprite.spritecollideany(self, self.maze.pellets)
         if collision:
             collision.kill()
@@ -177,4 +178,9 @@ class PacMan(pygame.sprite.Sprite):
             collision.kill()
             score += 20
             fruit_count += 1
-        return score, fruit_count
+        collision = pygame.sprite.spritecollideany(self, self.maze.power_pellets)
+        if collision:
+            collision.kill()
+            score += 20
+            power = True
+        return score, fruit_count, power
