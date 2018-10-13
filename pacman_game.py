@@ -22,10 +22,10 @@ class PacManPortalGame:
         self.clock = pygame.time.Clock()
         self.score_keeper = ScoreController(screen=self.screen,
                                             sb_pos=((self.screen.get_width() // 5),
-                                                    (self.screen.get_height() * 0.95)),
+                                                    (self.screen.get_height() * 0.965)),
                                             items_image='cherry.png',
                                             itc_pos=(int(self.screen.get_width() * 0.6),
-                                                     self.screen.get_height() * 0.95))
+                                                     self.screen.get_height() * 0.965))
         self.maze = Maze(screen=self.screen, maze_map_file='maze_map.txt')
         self.player = PacMan(screen=self.screen, maze=self.maze)
         self.ghosts = pygame.sprite.Group()
