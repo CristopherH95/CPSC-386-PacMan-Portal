@@ -3,6 +3,7 @@ from event_loop import EventLoop
 from ghost import Ghost
 from maze import Maze
 from pacman import PacMan
+from lives_status import PacManCounter
 from score import ScoreController
 
 
@@ -12,6 +13,7 @@ class PacManPortalGame:
 
     BLACK_BG = (0, 0, 0)
     START_EVENT = pygame.USEREVENT + 1
+    REBUILD_EVENT = pygame.USEREVENT + 2
 
     def __init__(self):
         pygame.init()
@@ -27,16 +29,22 @@ class PacManPortalGame:
                                             itc_pos=(int(self.screen.get_width() * 0.6),
                                                      self.screen.get_height() * 0.965))
         self.maze = Maze(screen=self.screen, maze_map_file='maze_map.txt')
+        self.life_counter = PacManCounter(screen=self.screen, ct_pos=((self.screen.get_width() // 3),
+                                                                      (self.screen.get_height() * 0.965)),
+                                          images_size=(self.maze.block_size, self.maze.block_size))
         self.player = PacMan(screen=self.screen, maze=self.maze)
         self.ghosts = pygame.sprite.Group()
+        self.first_ghost = None
         self.spawn_ghosts()
-        self.actions = {PacManPortalGame.START_EVENT: self.init_ghosts}
+        self.actions = {PacManPortalGame.START_EVENT: self.init_ghosts,
+                        PacManPortalGame.REBUILD_EVENT: self.rebuild_maze}
 
     def init_ghosts(self):
         """Remove the maze shields and kick start the ghost AI"""
         self.maze.remove_shields()
         for g in self.ghosts:
             g.enable()
+        pygame.time.set_timer(PacManPortalGame.START_EVENT, 0)  # disable timer repeat
 
     def spawn_ghosts(self):
         """Create all ghosts at their starting positions"""
@@ -47,19 +55,38 @@ class PacManPortalGame:
             g = Ghost(screen=self.screen, maze=self.maze, target=self.player,
                       spawn_info=spawn_info, ghost_file=files[idx])
             if files[idx] == 'ghost-red.png':
+                self.first_ghost = g
                 g.enable()  # red ghost is enabled first
             self.ghosts.add(g)
             idx = (idx + 1) % len(files)
 
-    def update_score(self):
-        """Check if PacMan has eaten pellets that increase the score"""
+    def rebuild_maze(self):
+        """Resets the maze to its initial state"""
+        self.maze.build_maze()
+        self.player.reset_position()
+        for g in self.ghosts:
+            g.reset_position()
+        if self.player.dead:
+            self.player.revive()
+        self.first_ghost.enable()
+        pygame.time.set_timer(PacManPortalGame.START_EVENT, 5000)  # Signal game start in 5 seconds
+        pygame.time.set_timer(PacManPortalGame.REBUILD_EVENT, 0)    # disable timer repeat
+
+    def check_player(self):
+        """Check the player to see if they have been hit by an enemy, or if they have consumed pellets/fruit"""
         n_score, n_fruits = self.player.eat()
         self.score_keeper.add_score(score=n_score, items=n_fruits if n_fruits > 0 else None)
+        if pygame.sprite.spritecollideany(self.player, self.ghosts) and not self.player.dead:
+            self.life_counter.decrement()
+            self.player.set_death()
+            for g in self.ghosts:
+                g.disable()
+            pygame.time.set_timer(PacManPortalGame.REBUILD_EVENT, 4000)  # Signal maze rebuild in 4 seconds
 
     def update_screen(self):
         """Update the game screen"""
         self.screen.fill(PacManPortalGame.BLACK_BG)
-        self.update_score()
+        self.check_player()
         self.maze.blit()
         self.ghosts.update()
         for g in self.ghosts:
@@ -67,6 +94,7 @@ class PacManPortalGame:
         self.player.update()
         self.player.blit()
         self.score_keeper.blit()
+        self.life_counter.blit()
         pygame.display.flip()
 
     def run_game(self):

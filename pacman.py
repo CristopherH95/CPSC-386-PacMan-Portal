@@ -9,7 +9,7 @@ class PacMan(pygame.sprite.Sprite):
     def __init__(self, screen, maze):
         super().__init__()
         self.screen = screen
-        self.radius = 5
+        self.radius = maze.block_size // 5
         self.maze = maze
         self.horizontal_images = ImageManager('pacman-horiz.png', sheet=True, pos_offsets=[(0, 0, 32, 32),
                                                                                            (32, 0, 32, 32),
@@ -25,18 +25,41 @@ class PacMan(pygame.sprite.Sprite):
                                                                                         (0, 64, 32, 32)],
                                             resize=(self.maze.block_size, self.maze.block_size),
                                             reversible=True)
+        self.death_images = ImageManager('pacman-death.png', sheet=True, pos_offsets=[(0, 0, 32, 32),
+                                                                                      (32, 0, 32, 32),
+                                                                                      (0, 32, 32, 32),
+                                                                                      (32, 32, 32, 32),
+                                                                                      (0, 64, 32, 32),
+                                                                                      (32, 64, 32, 32)],
+                                         resize=(self.maze.block_size, self.maze.block_size),
+                                         animation_delay=150, repeat=False)
         self.flip_status = {'use_horiz': True, 'h_flip': False, 'v_flip': False}
         self.spawn_info = self.maze.player_spawn[1]
         self.tile = self.maze.player_spawn[0]
         self.direction = None
-        self.speed = maze.block_size / 4
+        self.speed = maze.block_size // 7
         self.image, self.rect = self.horizontal_images.get_image()
         self.rect.centerx, self.rect.centery = self.spawn_info   # screen coordinates for spawn
+        self.dead = False
 
         # Keyboard related events/actions/releases
         self.event_map = {pygame.KEYDOWN: self.change_direction, pygame.KEYUP: self.reset_direction}
         self.action_map = {pygame.K_UP: self.set_move_up, pygame.K_LEFT: self.set_move_left,
                            pygame.K_DOWN: self.set_move_down, pygame.K_RIGHT: self.set_move_right}
+
+    def set_death(self):
+        """Set the death flag for PacMan and begin the death animation"""
+        self.dead = True
+        self.image, _ = self.death_images.get_image()
+
+    def revive(self):
+        """Set dead to False and give PacMan a default image"""
+        self.dead = False
+        self.image, _ = self.horizontal_images.get_image()
+
+    def reset_position(self):
+        """Reset position back to pre-define spawn location"""
+        self.rect.centerx, self.rect.centery = self.spawn_info  # screen coordinates for spawn
 
     def reset_direction(self, event):
         """Reset the movement direction if key-up on movement keys"""
@@ -117,21 +140,24 @@ class PacMan(pygame.sprite.Sprite):
 
     def update(self):
         """Update PacMan's position in the maze if moving, and if not blocked"""
-        if self.direction:  # TODO: convert direction to utilize tiles for AI
-            if self.flip_status['use_horiz']:
-                self.image = self.horizontal_images.next_image()
-            else:
-                self.image = self.vertical_images.next_image()
-            if not self.is_blocked():
-                if self.direction == 'u':
-                    self.rect.centery -= self.speed
-                elif self.direction == 'l':
-                    self.rect.centerx -= self.speed
-                elif self.direction == 'd':
-                    self.rect.centery += self.speed
-                elif self.direction == 'r':
-                    self.rect.centerx += self.speed
-            self.tile = (self.get_nearest_row(), self.get_nearest_col())
+        if not self.dead:
+            if self.direction:
+                if self.flip_status['use_horiz']:
+                    self.image = self.horizontal_images.next_image()
+                else:
+                    self.image = self.vertical_images.next_image()
+                if not self.is_blocked():
+                    if self.direction == 'u':
+                        self.rect.centery -= self.speed
+                    elif self.direction == 'l':
+                        self.rect.centerx -= self.speed
+                    elif self.direction == 'd':
+                        self.rect.centery += self.speed
+                    elif self.direction == 'r':
+                        self.rect.centerx += self.speed
+                self.tile = (self.get_nearest_row(), self.get_nearest_col())
+        else:
+            self.image = self.death_images.next_image()
 
     def blit(self):
         """Blit the PacMan sprite to the screen"""

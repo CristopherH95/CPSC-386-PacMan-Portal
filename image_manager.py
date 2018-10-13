@@ -6,7 +6,8 @@ class ImageManager:
     def __init__(self, img, sheet=False, pos_offsets=None,
                  resize=None, keys=None,
                  convert=True, transparency=True,
-                 animation_delay=None, reversible=False):
+                 animation_delay=None, reversible=False,
+                 repeat=True):
         if not sheet:
             self.images = [pygame.image.load('images/' + img)]  # single image
         else:
@@ -33,6 +34,7 @@ class ImageManager:
         self.animation_delay = animation_delay
         self.time_stamp = pygame.time.get_ticks()
         self.reversible = reversible
+        self.repeat = repeat
 
     def flip(self, x_bool=True, y_bool=False):
         """Flip images in the y, x, or both directions"""
@@ -58,6 +60,8 @@ class ImageManager:
         """Iterates the image manager to the next image it has stored"""
         if not isinstance(self.images, list):
             raise ValueError('next_image not callable when using keys')
+        if not self.repeat and self.image_index + 1 >= len(self.images):
+            return self.images[self.image_index]
         if self.reversible and self.image_index + 1 >= len(self.images):
             self.images.reverse()
         if not self.animation_delay:

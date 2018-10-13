@@ -20,12 +20,17 @@ class Ghost(Sprite):
         self.image, self.rect = self.norm_images.get_image()
         self.curr_eye, _ = self.eyes.get_image(key='r')    # default eye to looking right
         self.image.blit(self.curr_eye, (0, 0))  # combine eyes and body
-        self.rect.centerx, self.rect.centery = spawn_info[1]
+        self.start_pos = spawn_info[1]
+        self.reset_position()
         self.tile = spawn_info[0]
         self.search = None
         self.direction = None
-        self.speed = maze.block_size / 4
+        self.speed = maze.block_size / 8
         self.enabled = False
+
+    def reset_position(self):
+        """Hard reset the ghost position back to its original location"""
+        self.rect.centerx, self.rect.centery = self.start_pos
 
     def get_direction_options(self):
         """Check if the ghost is blocked by any maze barriers and return all directions possible to move in"""
@@ -115,6 +120,11 @@ class Ghost(Sprite):
         options = self.get_direction_options()
         self.direction = options[0]
         self.enabled = True
+
+    def disable(self):
+        """Disable the ghost AI"""
+        self.direction = None
+        self.enabled = False
 
     def update(self):
         """Update the ghost position"""
