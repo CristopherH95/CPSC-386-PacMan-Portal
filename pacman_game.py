@@ -5,6 +5,7 @@ from maze import Maze
 from pacman import PacMan
 from lives_status import PacManCounter
 from score import ScoreController, LevelTransition
+from sound_manager import SoundManager
 from menu import Menu, HighScoreScreen
 from intro import Intro
 
@@ -16,6 +17,7 @@ class PacManPortalGame:
     BLACK_BG = (0, 0, 0)
     START_EVENT = pygame.USEREVENT + 1
     REBUILD_EVENT = pygame.USEREVENT + 2
+    LEVEL_TRANSITION_EVENT = pygame.USEREVENT + 3
 
     def __init__(self):
         pygame.init()
@@ -36,12 +38,17 @@ class PacManPortalGame:
                                           images_size=(self.maze.block_size, self.maze.block_size))
         self.level_transition = LevelTransition(screen=self.screen, score_controller=self.score_keeper)
         self.game_over = True
+        self.pause = False
         self.player = PacMan(screen=self.screen, maze=self.maze)
         self.ghosts = pygame.sprite.Group()
+        self.ghost_sound_manager = SoundManager(sound_files=['ghost-blue.wav', 'ghost-eaten.wav', 'ghost-std.wav'],
+                                                keys=['blue', 'eaten', 'std'],
+                                                channel=Ghost.GHOST_AUDIO_CHANNEL)
         self.first_ghost = None
         self.spawn_ghosts()
         self.actions = {PacManPortalGame.START_EVENT: self.init_ghosts,
-                        PacManPortalGame.REBUILD_EVENT: self.rebuild_maze}
+                        PacManPortalGame.REBUILD_EVENT: self.rebuild_maze,
+                        PacManPortalGame.LEVEL_TRANSITION_EVENT: self.next_level}
 
     def init_ghosts(self):
         """Remove the maze shields and kick start the ghost AI"""
@@ -57,12 +64,24 @@ class PacManPortalGame:
         while len(self.maze.ghost_spawn) > 0:
             spawn_info = self.maze.ghost_spawn.pop()
             g = Ghost(screen=self.screen, maze=self.maze, target=self.player,
-                      spawn_info=spawn_info, ghost_file=files[idx])
+                      spawn_info=spawn_info, ghost_file=files[idx], sound_manager=self.ghost_sound_manager)
             if files[idx] == 'ghost-red.png':
-                self.first_ghost = g
-                g.enable()  # red ghost is enabled first
+                self.first_ghost = g    # red ghost should be first
             self.ghosts.add(g)
             idx = (idx + 1) % len(files)
+
+    def next_level(self):
+        """Increment the game level and then continue the game"""
+        pygame.time.set_timer(PacManPortalGame.LEVEL_TRANSITION_EVENT, 0)  # reset timer
+        self.player.clear_portals()
+        self.score_keeper.increment_level()
+        self.level_transition.prep_level_msg()
+        self.level_transition.show()
+        for g in self.ghosts:
+            g.disable()
+        self.rebuild_maze()
+        if self.pause:
+            self.pause = False
 
     def rebuild_maze(self):
         """Resets the maze to its initial state"""
@@ -92,27 +111,26 @@ class PacManPortalGame:
             self.score_keeper.add_score(200)
         elif ghost_collide and not (self.player.dead or ghost_collide.state['return']):
             self.life_counter.decrement()
+            self.player.clear_portals()
             self.player.set_death()
             for g in self.ghosts:
                 g.disable()
             pygame.time.set_timer(PacManPortalGame.REBUILD_EVENT, 4000)  # Signal maze rebuild in 4 seconds
-        elif not self.maze.pellets_left():
-            self.score_keeper.increment_level()
-            self.level_transition.prep_level_msg()
-            self.level_transition.show()
-            for g in self.ghosts:
-                g.disable()
-            self.rebuild_maze()
+        elif not self.maze.pellets_left() and not self.pause:
+            pygame.mixer.stop()
+            self.pause = True
+            pygame.time.set_timer(PacManPortalGame.LEVEL_TRANSITION_EVENT, 1000)
 
     def update_screen(self):
         """Update the game screen"""
         self.screen.fill(PacManPortalGame.BLACK_BG)
         self.check_player()
         self.maze.blit()
-        self.ghosts.update()
+        if not self.pause:
+            self.ghosts.update()
+            self.player.update()
         for g in self.ghosts:
             g.blit()
-        self.player.update()
         self.player.blit()
         self.score_keeper.blit()
         self.life_counter.blit()
@@ -147,6 +165,7 @@ class PacManPortalGame:
         e_loop = EventLoop(loop_running=True, actions={**self.player.event_map, **self.actions})
         pygame.time.set_timer(PacManPortalGame.START_EVENT, 5000)  # Signal game start in 5 seconds
         self.game_over = False
+        self.first_ghost.enable()
 
         while e_loop.loop_running:
             self.clock.tick(60)  # 60 fps limit

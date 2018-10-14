@@ -5,12 +5,15 @@ from image_manager import ImageManager
 
 class Ghost(Sprite):
     """Represents the enemies of PacMan which chase him around the maze"""
-    def __init__(self, screen, maze, target, spawn_info, ghost_file='ghost-red.png'):
+    GHOST_AUDIO_CHANNEL = 1
+
+    def __init__(self, screen, maze, target, spawn_info, sound_manager, ghost_file='ghost-red.png'):
         super().__init__()
         self.screen = screen
         self.maze = maze
         self.internal_map = maze.map_lines
         self.target = target
+        self.sound_manager = sound_manager
         self.norm_images = ImageManager(ghost_file, sheet=True, pos_offsets=[(0, 0, 32, 32), (0, 32, 32, 32)],
                                         resize=(self.maze.block_size, self.maze.block_size),
                                         animation_delay=250)
@@ -129,13 +132,12 @@ class Ghost(Sprite):
             self.rect = t   # temporarily move self
             if spritecollideany(self, self.maze.maze_blocks) and d not in remove:
                 remove.append(d)    # if collision, mark this direction for removal
-        for rem in remove:
-            del tests[rem]
-        remove.clear()
-        for d, t in tests.items():
-            self.rect = t   # temporarily move self
             if spritecollideany(self, self.maze.shield_blocks) and d not in remove:
-                remove.append(d)    # if collision, mark this direction for removal
+                remove.append(d)
+            if spritecollideany(self, self.target.portal_controller.blue_portal) and d not in remove:
+                remove.append(d)
+            if spritecollideany(self, self.target.portal_controller.orange_portal) and d not in remove:
+                remove.append(d)
         for rem in remove:
             del tests[rem]
         self.rect = original_pos    # reset position
@@ -146,6 +148,8 @@ class Ghost(Sprite):
         self.state['blue'] = True
         self.image, _ = self.blue_images.get_image()
         self.blue_start = time.get_ticks()
+        self.sound_manager.stop()
+        self.sound_manager.play_loop('blue')
 
     def change_eyes(self, look_direction):
         """Change the ghosts' eyes to look in the given direction"""
@@ -208,11 +212,24 @@ class Ghost(Sprite):
         options = self.get_direction_options()
         self.direction = options[0]
         self.state['enabled'] = True
+        self.sound_manager.play_loop('std')
 
     def disable(self):
         """Disable the ghost AI"""
         self.direction = None
         self.state['enabled'] = False
+        if self.state['blue']:
+            self.stop_blue_state(resume_audio=False)
+        self.sound_manager.stop()
+
+    def stop_blue_state(self, resume_audio=True):
+        """Revert back from blue state"""
+        self.state['blue'] = False
+        self.state['return'] = False
+        self.image, _ = self.norm_images.get_image()
+        self.sound_manager.stop()
+        if resume_audio:
+            self.sound_manager.play_loop('std')
 
     def check_path_tile(self):
         """Check if the ghost has reached the tile it's looking for in the path,
@@ -240,12 +257,12 @@ class Ghost(Sprite):
                     self.rect.centery += self.speed
                 elif self.direction == 'r' and 'r' in options:
                     self.rect.centerx += self.speed
-                self.change_eyes(self.direction)
+                self.change_eyes(self.direction or 'r')     # default look direction to right
                 self.image = self.norm_images.next_image()
             elif self.state['blue']:
                 self.image = self.blue_images.next_image()
                 if abs(self.blue_start - time.get_ticks()) > self.blue_interval:
-                    self.state['blue'] = False
+                    self.stop_blue_state()
                 elif abs(self.blue_start - time.get_ticks()) > int(self.blue_interval * 0.5):
                     if self.blink:
                         self.image = self.blue_warnings.next_image()

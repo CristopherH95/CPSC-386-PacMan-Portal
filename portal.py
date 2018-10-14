@@ -1,6 +1,7 @@
 import pygame
 from maze import Block
 from image_manager import ImageManager
+from sound_manager import SoundManager
 
 
 class Portal(Block):
@@ -102,16 +103,27 @@ class PortalProjectile(pygame.sprite.Sprite):
 
 class PortalController:
     """Manages portals and their related functionality within the game"""
+    PORTAL_AUDIO_CHANNEL = 3
+
     def __init__(self, screen, user, maze):
         self.screen = screen
         self.maze = maze
         self.user = user
+        self.sound_manager = SoundManager(sound_files=['portal-open.wav', 'portal-travel.wav'], keys=['open', 'travel'],
+                                          channel=PortalController.PORTAL_AUDIO_CHANNEL)
         self.blue_portal = pygame.sprite.GroupSingle()  # portals as GroupSingle, which only allows one per group
         self.blue_projectile = None
         self.orange_portal = pygame.sprite.GroupSingle()
         self.orange_projectile = None
         # converter for projectile direction to portal direction
         self.portal_directions = {'l': 'r', 'r': 'l', 'u': 'd', 'd': 'u'}
+
+    def clear_portals(self):
+        """Remove all portals and projectiles"""
+        self.blue_portal.empty()
+        self.orange_portal.empty()
+        self.blue_projectile = None
+        self.orange_projectile = None
 
     def fire_b_portal_projectile(self):
         """Create a projectile for generating a blue portal"""
@@ -163,6 +175,7 @@ class PortalController:
                 direction = self.portal_directions[self.blue_projectile.direction]
                 self.blue_projectile = None     # remove the projectile
                 self.create_blue_portal(x, y, direction)
+                self.sound_manager.play('open')
         elif self.orange_projectile:
             self.orange_projectile.update()
             # erase projectile if it hits a portal
@@ -177,6 +190,7 @@ class PortalController:
                 direction = self.portal_directions[self.orange_projectile.direction]
                 self.orange_projectile = None   # remove the projectile
                 self.create_orange_portal(x, y, direction)
+                self.sound_manager.play('open')
 
     def portables_usable(self):
         """Return True if the portables are usable (i.e. there are two of them)"""
@@ -206,6 +220,7 @@ class PortalController:
                 x, y = ((self.screen.get_width()) // 5 + (j * self.maze.block_size)), \
                        ((self.screen.get_height()) // 12 + (i * self.maze.block_size))
                 arg.rect.x, arg.rect.y = x, y
+                self.sound_manager.play('travel')
             elif pygame.sprite.spritecollideany(arg, self.orange_portal) and self.blue_portal:
                 # get i, j as it relates to the maze map
                 i, j = self.blue_portal.sprite.get_nearest_row(), self.blue_portal.sprite.get_nearest_col()
@@ -222,6 +237,7 @@ class PortalController:
                 x, y = ((self.screen.get_width() // 5) + (j * self.maze.block_size)), \
                        ((self.screen.get_height() // 12) + (i * self.maze.block_size))
                 arg.rect.x, arg.rect.y = x, y
+                self.sound_manager.play('travel')
 
     def blit(self):
         """Blit the portal controller's display components to the screen"""

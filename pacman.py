@@ -1,17 +1,23 @@
 import pygame
 from image_manager import ImageManager
+from sound_manager import SoundManager
 from portal import PortalController
 
 
 class PacMan(pygame.sprite.Sprite):
     """Represents the player character 'PacMan' and its related logic/control"""
     PAC_YELLOW = (255, 255, 0)
+    PAC_AUDIO_CHANNEL = 0
 
     def __init__(self, screen, maze):
         super().__init__()
         self.screen = screen
         self.radius = maze.block_size // 5
         self.maze = maze
+        self.sound_manager = SoundManager(sound_files=['pacman-pellet-eat.wav', 'pacman-fruit-eat.wav',
+                                                       'pacman-killed.wav', 'pacman-portal.wav'],
+                                          keys=['eat', 'fruit', 'dead', 'portal'],
+                                          channel=PacMan.PAC_AUDIO_CHANNEL)
         self.horizontal_images = ImageManager('pacman-horiz.png', sheet=True, pos_offsets=[(0, 0, 32, 32),
                                                                                            (32, 0, 32, 32),
                                                                                            (0, 32, 32, 32),
@@ -51,16 +57,23 @@ class PacMan(pygame.sprite.Sprite):
                            pygame.K_DOWN: self.set_move_down, pygame.K_RIGHT: self.set_move_right,
                            pygame.K_q: self.blue_portal, pygame.K_w: self.orange_portal}
 
+    def clear_portals(self):
+        """Remove all portals from play"""
+        self.portal_controller.clear_portals()
+
     def blue_portal(self):
         """Create a blue portal from PacMan"""
+        self.sound_manager.play('portal')
         self.portal_controller.fire_b_portal_projectile()
 
     def orange_portal(self):
         """Create an orange portal from PacMan"""
+        self.sound_manager.play('portal')
         self.portal_controller.fire_o_portal_projectile()
 
     def set_death(self):
         """Set the death flag for PacMan and begin the death animation"""
+        self.sound_manager.play('dead')
         self.dead = True
         self.image, _ = self.death_images.get_image()
 
@@ -194,14 +207,17 @@ class PacMan(pygame.sprite.Sprite):
         if collision:
             collision.kill()
             score += 10
+            self.sound_manager.play('eat')
         collision = pygame.sprite.spritecollideany(self, self.maze.fruits)
         if collision:
             collision.kill()
             score += 20
             fruit_count += 1
+            self.sound_manager.play('fruit')
         collision = pygame.sprite.spritecollideany(self, self.maze.power_pellets)
         if collision:
             collision.kill()
             score += 20
             power = True
+            self.sound_manager.play('eat')
         return score, fruit_count, power
