@@ -235,7 +235,6 @@ class Ghost(Sprite):
         """Check if the ghost has reached the tile it's looking for in the path,
         and if so remove it from the path"""
         self.tile = (self.get_nearest_row(), self.get_nearest_col())
-        print('current tile: ', self.tile)
         if self.return_path and self.tile == self.return_path[0]:
             del self.return_path[0]
             if not len(self.return_path) > 0:
@@ -271,10 +270,8 @@ class Ghost(Sprite):
                     elif abs(self.last_blink - time.get_ticks()) > self.blink_interval:
                         self.blink = True
             elif self.state['return']:
-                print('path: ', self.return_path)
                 if abs(self.eaten_time - time.get_ticks()) > self.return_delay:
                     self.image, _ = self.eyes.get_image(key=self.direction)
-                    print('direction: ', self.direction)
                     test = self.check_path_tile()
                     if test == '*':
                         self.state['return'] = False

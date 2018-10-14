@@ -21,6 +21,7 @@ class PacManPortalGame:
 
     def __init__(self):
         pygame.init()
+        pygame.mixer.music.load('sounds/bg-music.wav')
         self.screen = pygame.display.set_mode(
             (800, 600)
         )
@@ -37,6 +38,7 @@ class PacManPortalGame:
                                                                       (self.screen.get_height() * 0.965)),
                                           images_size=(self.maze.block_size, self.maze.block_size))
         self.level_transition = LevelTransition(screen=self.screen, score_controller=self.score_keeper)
+        self.level_transition.prep_level_msg()
         self.game_over = True
         self.pause = False
         self.player = PacMan(screen=self.screen, maze=self.maze)
@@ -115,6 +117,7 @@ class PacManPortalGame:
             self.player.set_death()
             for g in self.ghosts:
                 g.disable()
+            pygame.time.set_timer(PacManPortalGame.START_EVENT, 0)  # stop the start event timer, if it was running
             pygame.time.set_timer(PacManPortalGame.REBUILD_EVENT, 4000)  # Signal maze rebuild in 4 seconds
         elif not self.maze.pellets_left() and not self.pause:
             pygame.mixer.stop()
@@ -155,10 +158,15 @@ class PacManPortalGame:
                 hs_screen.blit()    # display highs score screen
                 hs_screen.check_done()
             if menu.ready_to_play:
+                pygame.mixer.music.stop()   # stop menu music
+                self.level_transition.show()
                 self.play_game()    # player selected play, so run game
                 menu.ready_to_play = False
                 self.score_keeper.save_high_scores()    # save high scores only on complete play
                 hs_screen.prep_images()     # update high scores page
+                hs_screen.position()
+            elif not pygame.mixer.music.get_busy():
+                pygame.mixer.music.play(-1)     # music loop
             pygame.display.flip()
 
     def play_game(self):
@@ -173,6 +181,9 @@ class PacManPortalGame:
             e_loop.check_events()
             self.update_screen()
             if self.game_over:
+                pygame.mixer.stop()
+                self.score_keeper.reset_level()
+                self.level_transition.prep_level_msg()
                 e_loop.loop_running = False
 
 
