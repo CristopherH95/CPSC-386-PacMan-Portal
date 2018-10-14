@@ -133,8 +133,6 @@ class Ghost(Sprite):
             self.rect = t   # temporarily move self
             if spritecollideany(self, self.maze.maze_blocks) and d not in remove:
                 remove.append(d)    # if collision, mark this direction for removal
-            if spritecollideany(self, self.maze.shield_blocks) and d not in remove:
-                remove.append(d)
             if spritecollideany(self, self.target.portal_controller.blue_portal) and d not in remove:
                 remove.append(d)
             if spritecollideany(self, self.target.portal_controller.orange_portal) and d not in remove:
@@ -146,11 +144,12 @@ class Ghost(Sprite):
 
     def begin_blue_state(self):
         """Switch the ghost to its blue state"""
-        self.state['blue'] = True
-        self.image, _ = self.blue_images.get_image()
-        self.blue_start = time.get_ticks()
-        self.sound_manager.stop()
-        self.sound_manager.play_loop('blue')
+        if not self.state['return']:
+            self.state['blue'] = True
+            self.image, _ = self.blue_images.get_image()
+            self.blue_start = time.get_ticks()
+            self.sound_manager.stop()
+            self.sound_manager.play_loop('blue')
 
     def change_eyes(self, look_direction):
         """Change the ghosts' eyes to look in the given direction"""
@@ -245,12 +244,13 @@ class Ghost(Sprite):
 
     def disable(self):
         """Disable the ghost AI"""
-        self.direction = None
-        self.state['enabled'] = False
-        self.return_path = None
+        self.direction = None   # remove direction
+        self.state['enabled'] = False   # reset states
         self.state['return'] = False
+        self.return_path = None     # remove path
         if self.state['blue']:
             self.stop_blue_state(resume_audio=False)
+        self.image, _ = self.norm_images.get_image()    # reset image
         self.sound_manager.stop()
 
     def stop_blue_state(self, resume_audio=True):

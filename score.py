@@ -16,6 +16,7 @@ class LevelTransition:
         self.level_msg_rect = None
         self.transition_time = transition_time     # total time to wait until the transition ends
         self.transition_begin = None
+        self.transition_show = False
 
     def prep_level_msg(self):
         """Prepare a message for the current level number"""
@@ -25,16 +26,21 @@ class LevelTransition:
         level_pos = self.screen.get_width() // 2, self.screen.get_height() // 2
         self.level_msg_rect.centerx, self.level_msg_rect.centery = level_pos
 
-    def show(self):
-        """Display the level transition to the screen"""
+    def set_show_transition(self):
+        """Begin the sequence for displaying the transition"""
+        self.prep_level_msg()
         self.transition_begin = pygame.time.get_ticks()
+        self.transition_show = True
 
-        while abs(self.transition_begin - pygame.time.get_ticks()) <= self.transition_time:
+    def draw(self):
+        """Display the level transition to the screen"""
+        if abs(self.transition_begin - pygame.time.get_ticks()) > self.transition_time:
+            self.transition_show = False
+        else:
             self.screen.fill((0, 0, 0))
             self.screen.blit(self.level_msg, self.level_msg_rect)
             if abs(self.transition_begin - pygame.time.get_ticks()) >= self.transition_time // 2:
                 self.screen.blit(self.ready_msg, self.ready_msg_rect)
-            pygame.display.flip()
 
 
 class ScoreBoard:
