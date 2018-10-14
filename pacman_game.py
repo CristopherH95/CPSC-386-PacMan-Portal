@@ -147,6 +147,7 @@ class PacManPortalGame:
         e_loop = EventLoop(loop_running=True, actions={pygame.MOUSEBUTTONDOWN: menu.check_buttons})
 
         while e_loop.loop_running:
+            self.clock.tick(60)  # 60 fps limit
             e_loop.check_events()
             self.screen.fill(PacManPortalGame.BLACK_BG)
             if not menu.hs_screen:
