@@ -41,6 +41,7 @@ class Ghost(Sprite):
         self.reset_position()
         self.tile = spawn_info[0]
         self.direction = None
+        self.last_position = None
         self.speed = maze.block_size / 8
         self.state = {'enabled': False, 'blue': False, 'return': False}
         self.blue_interval = 5000   # 5 second time limit for blue status
@@ -158,7 +159,7 @@ class Ghost(Sprite):
         self.image.blit(self.curr_eye, (0, 0))  # combine eyes and body
 
     def get_chase_direction(self, options):
-        """Figure out a new direction to move in based on the target and walls"""
+        """Figure out a new direction to chase in based on the target and walls"""
         pick_direction = None
         target_pos = (self.target.rect.centerx, self.target.rect.centery)
         test = (abs(target_pos[0]), abs(target_pos[1]))
@@ -178,11 +179,39 @@ class Ghost(Sprite):
                 return 'u'
             if 'l' in options:
                 return 'l'
+            if 'r' in options:
+                return 'r'
+            if 'd' in options:
+                return 'd'
+        else:   # desired direction available, return it
+            return pick_direction
+
+    def get_flee_direction(self, options):
+        """Figure out a new direction to flee in based on the target and walls"""
+        pick_direction = None
+        target_pos = (self.target.rect.centerx, self.target.rect.centery)
+        test = (abs(target_pos[0]), abs(target_pos[1]))
+        prefer = test.index(max(test[0], test[1]))
+        if prefer == 0:  # x direction
+            if target_pos[prefer] < self.rect.centerx:  # to the left, so move right
+                pick_direction = 'r'
+            elif target_pos[prefer] > self.rect.centerx:  # to the right, so move left
+                pick_direction = 'l'
+        else:  # y direction
+            if target_pos[prefer] < self.rect.centery:  # upward, so move down
+                pick_direction = 'd'
+            elif target_pos[prefer] > self.rect.centery:  # downward, so move up
+                pick_direction = 'u'
+        if pick_direction not in options:  # desired direction not available
+            if 'u' in options:  # pick a direction that is available
+                return 'u'
+            if 'l' in options:
+                return 'l'
             if 'd' in options:
                 return 'd'
             if 'r' in options:
                 return 'r'
-        else:   # desired direction available, return it
+        else:  # desired direction available, return it
             return pick_direction
 
     def get_nearest_col(self):
@@ -218,6 +247,8 @@ class Ghost(Sprite):
         """Disable the ghost AI"""
         self.direction = None
         self.state['enabled'] = False
+        self.return_path = None
+        self.state['return'] = False
         if self.state['blue']:
             self.stop_blue_state(resume_audio=False)
         self.sound_manager.stop()
@@ -241,51 +272,75 @@ class Ghost(Sprite):
                 return '*'  # signal that the path is complete
         return None
 
+    def update_normal(self):
+        """Update logic for a normal state"""
+        options = self.get_direction_options()
+        if self.is_at_intersection() or self.last_position == (self.rect.centerx, self.rect.centery):
+            self.direction = self.get_chase_direction(options)
+        if self.direction == 'u' and 'u' in options:
+            self.rect.centery -= self.speed
+        elif self.direction == 'l' and 'l' in options:
+            self.rect.centerx -= self.speed
+        elif self.direction == 'd' and 'd' in options:
+            self.rect.centery += self.speed
+        elif self.direction == 'r' and 'r' in options:
+            self.rect.centerx += self.speed
+        self.change_eyes(self.direction or 'r')  # default look direction to right
+        self.image = self.norm_images.next_image()
+
+    def update_blue(self):
+        """Update logic for blue state"""
+        self.image = self.blue_images.next_image()
+        options = self.get_direction_options()
+        if self.is_at_intersection() or self.last_position == (self.rect.centerx, self.rect.centery):
+            self.direction = self.get_flee_direction(options)
+        if self.direction == 'u' and 'u' in options:
+            self.rect.centery -= self.speed
+        elif self.direction == 'l' and 'l' in options:
+            self.rect.centerx -= self.speed
+        elif self.direction == 'd' and 'd' in options:
+            self.rect.centery += self.speed
+        elif self.direction == 'r' and 'r' in options:
+            self.rect.centerx += self.speed
+        if abs(self.blue_start - time.get_ticks()) > self.blue_interval:
+            self.stop_blue_state()
+        elif abs(self.blue_start - time.get_ticks()) > int(self.blue_interval * 0.5):
+            if self.blink:
+                self.image = self.blue_warnings.next_image()
+                self.blink = False
+                self.last_blink = time.get_ticks()
+            elif abs(self.last_blink - time.get_ticks()) > self.blink_interval:
+                self.blink = True
+
+    def update_return(self):
+        """Update logic for when returning to ghost spawn"""
+        if abs(self.eaten_time - time.get_ticks()) > self.return_delay:
+            self.image, _ = self.eyes.get_image(key=self.direction)
+            test = self.check_path_tile()
+            if test == '*':
+                self.state['return'] = False
+                self.direction = self.get_chase_direction(self.get_direction_options())
+            else:
+                self.direction = self.get_dir_from_path()
+            if self.direction == 'u':
+                self.rect.centery -= self.speed
+            elif self.direction == 'l':
+                self.rect.centerx -= self.speed
+            elif self.direction == 'd':
+                self.rect.centery += self.speed
+            elif self.direction == 'r':
+                self.rect.centerx += self.speed
+
     def update(self):
         """Update the ghost position"""
         if self.state['enabled']:
             if not self.state['blue'] and not self.state['return']:
-                options = self.get_direction_options()
-                if self.is_at_intersection():
-                    self.direction = self.get_chase_direction(options)
-                if self.direction == 'u' and 'u' in options:
-                    self.rect.centery -= self.speed
-                elif self.direction == 'l' and 'l' in options:
-                    self.rect.centerx -= self.speed
-                elif self.direction == 'd' and 'd' in options:
-                    self.rect.centery += self.speed
-                elif self.direction == 'r' and 'r' in options:
-                    self.rect.centerx += self.speed
-                self.change_eyes(self.direction or 'r')     # default look direction to right
-                self.image = self.norm_images.next_image()
+                self.update_normal()
             elif self.state['blue']:
-                self.image = self.blue_images.next_image()
-                if abs(self.blue_start - time.get_ticks()) > self.blue_interval:
-                    self.stop_blue_state()
-                elif abs(self.blue_start - time.get_ticks()) > int(self.blue_interval * 0.5):
-                    if self.blink:
-                        self.image = self.blue_warnings.next_image()
-                        self.blink = False
-                        self.last_blink = time.get_ticks()
-                    elif abs(self.last_blink - time.get_ticks()) > self.blink_interval:
-                        self.blink = True
+                self.update_blue()
             elif self.state['return']:
-                if abs(self.eaten_time - time.get_ticks()) > self.return_delay:
-                    self.image, _ = self.eyes.get_image(key=self.direction)
-                    test = self.check_path_tile()
-                    if test == '*':
-                        self.state['return'] = False
-                        self.direction = self.get_chase_direction(self.get_direction_options())
-                    else:
-                        self.direction = self.get_dir_from_path()
-                    if self.direction == 'u':
-                        self.rect.centery -= self.speed
-                    elif self.direction == 'l':
-                        self.rect.centerx -= self.speed
-                    elif self.direction == 'd':
-                        self.rect.centery += self.speed
-                    elif self.direction == 'r':
-                        self.rect.centerx += self.speed
+                self.update_return()
+            self.last_position = (self.rect.centerx, self.rect.centery)
 
     def blit(self):
         """Blit ghost image to the screen"""
