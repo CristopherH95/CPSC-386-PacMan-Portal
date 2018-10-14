@@ -2,6 +2,41 @@ import json
 import pygame
 
 
+class LevelTransition:
+    """Displays a level transition"""
+    def __init__(self, screen, score_controller, transition_time=5000):
+        self.screen = screen
+        self.score_controller = score_controller
+        self.font = pygame.font.Font('fonts/LuckiestGuy-Regular.ttf', 32)
+        self.ready_msg = self.font.render('Get Ready!', True, ScoreBoard.SCORE_WHITE)
+        self.ready_msg_rect = self.ready_msg.get_rect()
+        ready_pos = screen.get_width() // 2, int(screen.get_height() * 0.65)
+        self.ready_msg_rect.centerx, self.ready_msg_rect.centery = ready_pos
+        self.level_msg = None
+        self.level_msg_rect = None
+        self.transition_time = transition_time     # total time to wait until the transition ends
+        self.transition_begin = None
+
+    def prep_level_msg(self):
+        """Prepare a message for the current level number"""
+        text = 'level ' + str(self.score_controller.level)
+        self.level_msg = self.font.render(text, True, ScoreBoard.SCORE_WHITE)
+        self.level_msg_rect = self.level_msg.get_rect()
+        level_pos = self.screen.get_width() // 2, self.screen.get_height() // 2
+        self.level_msg_rect.centerx, self.level_msg_rect.centery = level_pos
+
+    def show(self):
+        """Display the level transition to the screen"""
+        self.transition_begin = pygame.time.get_ticks()
+
+        while abs(self.transition_begin - pygame.time.get_ticks()) <= self.transition_time:
+            self.screen.fill((0, 0, 0))
+            self.screen.blit(self.level_msg, self.level_msg_rect)
+            if abs(self.transition_begin - pygame.time.get_ticks()) >= self.transition_time // 2:
+                self.screen.blit(self.ready_msg, self.ready_msg_rect)
+            pygame.display.flip()
+
+
 class ScoreBoard:
     """Represents the score display for the screen"""
 
@@ -81,10 +116,19 @@ class ScoreController:
     """Handles scoring and representation of scores"""
     def __init__(self, screen, items_image, sb_pos=(0, 0), itc_pos=(0, 0)):
         self.score = 0
+        self.level = 1
         self.high_scores = []
         self.scoreboard = ScoreBoard(screen=screen, pos=sb_pos)
         self.item_counter = ItemCounter(screen=screen, pos=itc_pos, image_name=items_image)
         self.init_high_scores()
+
+    def increment_level(self, up=1):
+        """Add a number to the level"""
+        self.level += up
+
+    def reset_level(self):
+        """Reset level back to its base value"""
+        self.level = 1
 
     def add_score(self, score, items=None):
         """Add new score and prepare for scoreboard display"""

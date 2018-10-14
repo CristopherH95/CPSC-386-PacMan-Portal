@@ -44,6 +44,10 @@ class Maze:
         self.ghost_spawn = []
         self.build_maze()   # init maze from file data
 
+    def pellets_left(self):
+        """Return True if the maze still has pellets, False if not"""
+        return True if self.pellets or self.power_pellets else False
+
     def build_maze(self):
         """Build the maze layout based on the maze map text file"""
         # reset maze assets if they exist already
