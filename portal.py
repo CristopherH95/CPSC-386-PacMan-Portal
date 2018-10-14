@@ -18,23 +18,23 @@ class Portal(Block):
         self.p_type = p_type
         if p_type == Portal.P_TYPE_1:
             self.image_manager = ImageManager('blue-portal-bg.png', sheet=True, pos_offsets=[(0, 0, 32, 32),
-                                                                                          (32, 0, 32, 32),
-                                                                                          (64, 0, 32, 32),
-                                                                                          (0, 32, 32, 32),
-                                                                                          (32, 32, 32, 32),
-                                                                                          (64, 32, 32, 32),
-                                                                                          (0, 64, 32, 32)],
+                                                                                             (32, 0, 32, 32),
+                                                                                             (64, 0, 32, 32),
+                                                                                             (0, 32, 32, 32),
+                                                                                             (32, 32, 32, 32),
+                                                                                             (64, 32, 32, 32),
+                                                                                             (0, 64, 32, 32)],
                                               resize=(self.maze.block_size, self.maze.block_size),
                                               animation_delay=250)
             image, _ = self.image_manager.get_image()
         else:
             self.image_manager = ImageManager('orange-portal-bg.png', sheet=True, pos_offsets=[(0, 0, 32, 32),
-                                                                                            (32, 0, 32, 32),
-                                                                                            (64, 0, 32, 32),
-                                                                                            (0, 32, 32, 32),
-                                                                                            (32, 32, 32, 32),
-                                                                                            (64, 32, 32, 32),
-                                                                                            (0, 64, 32, 32)],
+                                                                                               (32, 0, 32, 32),
+                                                                                               (64, 0, 32, 32),
+                                                                                               (0, 32, 32, 32),
+                                                                                               (32, 32, 32, 32),
+                                                                                               (64, 32, 32, 32),
+                                                                                               (0, 64, 32, 32)],
                                               resize=(self.maze.block_size, self.maze.block_size),
                                               animation_delay=250)
             image, _ = self.image_manager.get_image()

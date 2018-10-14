@@ -4,7 +4,7 @@ from ghost import Ghost
 from maze import Maze
 from pacman import PacMan
 from lives_status import PacManCounter
-from score import ScoreController
+from score import ScoreController, LevelTransition
 from menu import Menu, HighScoreScreen
 from intro import Intro
 
@@ -34,6 +34,7 @@ class PacManPortalGame:
         self.life_counter = PacManCounter(screen=self.screen, ct_pos=((self.screen.get_width() // 3),
                                                                       (self.screen.get_height() * 0.965)),
                                           images_size=(self.maze.block_size, self.maze.block_size))
+        self.level_transition = LevelTransition(screen=self.screen, score_controller=self.score_keeper)
         self.game_over = True
         self.player = PacMan(screen=self.screen, maze=self.maze)
         self.ghosts = pygame.sprite.Group()
@@ -95,6 +96,13 @@ class PacManPortalGame:
             for g in self.ghosts:
                 g.disable()
             pygame.time.set_timer(PacManPortalGame.REBUILD_EVENT, 4000)  # Signal maze rebuild in 4 seconds
+        elif not self.maze.pellets_left():
+            self.score_keeper.increment_level()
+            self.level_transition.prep_level_msg()
+            self.level_transition.show()
+            for g in self.ghosts:
+                g.disable()
+            self.rebuild_maze()
 
     def update_screen(self):
         """Update the game screen"""
@@ -121,17 +129,17 @@ class PacManPortalGame:
             e_loop.check_events()
             self.screen.fill(PacManPortalGame.BLACK_BG)
             if not menu.hs_screen:
-                intro_seq.update()
+                intro_seq.update()  # display intro/menu
                 intro_seq.blit()
                 menu.update()
                 menu.blit()
             else:
-                hs_screen.blit()
+                hs_screen.blit()    # display highs score screen
                 hs_screen.check_done()
             if menu.ready_to_play:
-                self.play_game()
+                self.play_game()    # player selected play, so run game
                 menu.ready_to_play = False
-                self.score_keeper.save_high_scores()
+                self.score_keeper.save_high_scores()    # save high scores only on complete play
             pygame.display.flip()
 
     def play_game(self):
