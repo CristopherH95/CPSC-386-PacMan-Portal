@@ -158,6 +158,7 @@ class PacManPortalGame:
                 self.play_game()    # player selected play, so run game
                 menu.ready_to_play = False
                 self.score_keeper.save_high_scores()    # save high scores only on complete play
+                hs_screen.prep_images()     # update high scores page
             pygame.display.flip()
 
     def play_game(self):

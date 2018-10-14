@@ -49,7 +49,7 @@ class HighScoreScreen:
     """Displays high score data to the screen"""
     def __init__(self, screen, score_controller, size=26, background=(0, 0, 0)):
         self.screen = screen
-        self.scores = score_controller.high_scores
+        self.score_controller = score_controller
         self.back_button = Button(screen, 'Back', pos=(int(screen.get_width() * 0.25), int(screen.get_height() * 0.9)),
                                   alt_color=PacMan.PAC_YELLOW)
         self.font = pygame.font.Font('fonts/LuckiestGuy-Regular.ttf', size)
@@ -75,7 +75,7 @@ class HighScoreScreen:
     def prep_images(self):
         """Render all scores as displayable images"""
         self.images.clear()
-        for num, score in enumerate(self.scores):
+        for num, score in enumerate(self.score_controller.high_scores):
             image = self.font.render('#' + str(num + 1) + ' :  ' + str(score), True, (255, 255, 255))
             rect = image.get_rect()
             self.images.append([image, rect])
