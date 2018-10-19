@@ -40,6 +40,7 @@ class Ghost(Sprite):
         self.start_pos = spawn_info[1]
         self.reset_position()
         self.tile = spawn_info[0]
+        self.last_tile = self.tile
         self.direction = None
         self.last_position = None
         self.speed = maze.block_size / 8
@@ -108,11 +109,16 @@ class Ghost(Sprite):
             print('Error while trying to get new path direction', ie)
             return None
 
+    def update_tile(self):
+        """Set the current tile to the nearest col/row and record the last tile"""
+        self.last_tile = self.tile
+        self.tile = (self.get_nearest_row(), self.get_nearest_col())
+
     def set_eaten(self):
         """Begin the ghost's sequence for having been eaten by PacMan"""
         self.state['return'] = True
         self.state['blue'] = False
-        self.tile = (self.get_nearest_row(), self.get_nearest_col())
+        self.update_tile()
         self.return_path = Ghost.find_path(self.internal_map, self.tile, self.return_tile)
         self.direction = self.get_dir_from_path()
         self.image = self.score_font.render('200', True, (255, 255, 255))
@@ -215,16 +221,26 @@ class Ghost(Sprite):
 
     def get_nearest_col(self):
         """Get the current column location on the maze map"""
-        return (self.rect.x - (self.screen.get_width() // 5)) // self.maze.block_size
+        return ((self.rect.centerx - ((self.screen.get_width() // 5)
+                                      + (self.maze.block_size // 2))) // self.maze.block_size)
 
     def get_nearest_row(self):
         """Get the current row location on the maze map"""
-        return (self.rect.y - (self.screen.get_height() // 12)) // self.maze.block_size
+        return ((self.rect.centery - ((self.screen.get_height() // 12)
+                                      + (self.maze.block_size // 2))) // self.maze.block_size)
+
+    def round_xy_pos(self):
+        """Round the ghost's x-position and y-position to the nearest corresponding column on the maze map"""
+        col = self.get_nearest_col()
+        row = self.get_nearest_row()
+        x_pos = (self.screen.get_width() // 5) + (col * self.maze.block_size) + (self.maze.block_size // 2)
+        y_pos = (self.screen.get_height() // 12) + (row * self.maze.block_size) + (self.maze.block_size // 2)
+        self.rect.centerx, self.rect.centery = x_pos, y_pos
 
     def is_at_intersection(self):
         """Return True if the ghost is at an intersection, False if not"""
         directions = 0
-        self.tile = (self.get_nearest_row(), self.get_nearest_col())
+        self.update_tile()
         if self.internal_map[self.tile[0] - 1][self.tile[1]] not in ('x', ):
             directions += 1
         if self.internal_map[self.tile[0] + 1][self.tile[1]] not in ('x', ):
@@ -265,7 +281,7 @@ class Ghost(Sprite):
     def check_path_tile(self):
         """Check if the ghost has reached the tile it's looking for in the path,
         and if so remove it from the path"""
-        self.tile = (self.get_nearest_row(), self.get_nearest_col())
+        self.update_tile()
         if self.return_path and self.tile == self.return_path[0]:
             del self.return_path[0]
             if not len(self.return_path) > 0:
@@ -278,13 +294,13 @@ class Ghost(Sprite):
         if self.is_at_intersection() or self.last_position == (self.rect.centerx, self.rect.centery):
             self.direction = self.get_chase_direction(options)
         if self.direction == 'u' and 'u' in options:
-            self.rect.centery -= self.speed
+            self.rect.y -= self.speed
         elif self.direction == 'l' and 'l' in options:
-            self.rect.centerx -= self.speed
+            self.rect.x -= self.speed
         elif self.direction == 'd' and 'd' in options:
-            self.rect.centery += self.speed
+            self.rect.y += self.speed
         elif self.direction == 'r' and 'r' in options:
-            self.rect.centerx += self.speed
+            self.rect.x += self.speed
         self.change_eyes(self.direction or 'r')  # default look direction to right
         self.image = self.norm_images.next_image()
 
@@ -295,13 +311,13 @@ class Ghost(Sprite):
         if self.is_at_intersection() or self.last_position == (self.rect.centerx, self.rect.centery):
             self.direction = self.get_flee_direction(options)
         if self.direction == 'u' and 'u' in options:
-            self.rect.centery -= self.speed
+            self.rect.y -= self.speed
         elif self.direction == 'l' and 'l' in options:
-            self.rect.centerx -= self.speed
+            self.rect.x -= self.speed
         elif self.direction == 'd' and 'd' in options:
-            self.rect.centery += self.speed
+            self.rect.y += self.speed
         elif self.direction == 'r' and 'r' in options:
-            self.rect.centerx += self.speed
+            self.rect.x += self.speed
         if abs(self.blue_start - time.get_ticks()) > self.blue_interval:
             self.stop_blue_state()
         elif abs(self.blue_start - time.get_ticks()) > int(self.blue_interval * 0.5):
@@ -319,17 +335,20 @@ class Ghost(Sprite):
             test = self.check_path_tile()
             if test == '*':
                 self.state['return'] = False
+                self.round_xy_pos()
                 self.direction = self.get_chase_direction(self.get_direction_options())
             else:
                 self.direction = self.get_dir_from_path()
             if self.direction == 'u':
-                self.rect.centery -= self.speed
+                self.rect.y -= self.speed
             elif self.direction == 'l':
-                self.rect.centerx -= self.speed
+                self.rect.x -= self.speed
             elif self.direction == 'd':
-                self.rect.centery += self.speed
+                self.rect.y += self.speed
             elif self.direction == 'r':
-                self.rect.centerx += self.speed
+                self.rect.x += self.speed
+            if self.last_tile != self.tile:
+                self.round_xy_pos()
 
     def update(self):
         """Update the ghost position"""

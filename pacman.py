@@ -139,11 +139,13 @@ class PacMan(pygame.sprite.Sprite):
 
     def get_nearest_col(self):
         """Get the current column location on the maze map"""
-        return (self.rect.x - (self.screen.get_width() // 5)) // self.maze.block_size
+        return ((self.rect.x - ((self.screen.get_width() // 5)
+                                + (self.maze.block_size // 2))) // self.maze.block_size)
 
     def get_nearest_row(self):
         """Get the current row location on the maze map"""
-        return (self.rect.y - (self.screen.get_height() // 12)) // self.maze.block_size
+        return ((self.rect.y - ((self.screen.get_height() // 12)
+                                + (self.maze.block_size // 2))) // self.maze.block_size)
 
     def is_blocked(self):
         """Check if PacMan is blocked by any maze barriers, return True if blocked, False if clear"""
