@@ -2,7 +2,7 @@ Pacman game with a Portal twist
 
 Written By: Cristopher Hernandez
 
-REQUIRED: pygame
+REQUIRED: pygame, python 3.5+
 
 if pygame is not installed, simply run
 
