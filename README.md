@@ -14,6 +14,12 @@ pip install -r requirements.txt
 
 TO RUN: execute pacman_game.py (e.g.: run 'python pacman_game.py')
 
+IMAGES:
+  made using piskel (https://piskelapp.com), with any additional editing using Gimp (https://www.gimp.org/)
+  
+AUDIO:
+  made using BeepBox (https://www.beepbox.co/), with any additional editing using Audacity (https://www.audacityteam.org/)
+
 NOTES:
 
 Arrow keys move PacMan through the maze. 'Q' creates an blue portal, 'W' creates an orange portal.
