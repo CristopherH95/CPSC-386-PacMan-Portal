@@ -96,6 +96,14 @@ class PortalProjectile(pygame.sprite.Sprite):
         else:
             self.rect.centery += self.speed
 
+    def is_off_screen(self):
+        """Return True if projectile is off screen, False otherwise"""
+        if self.rect.x < 0 or self.rect.y < 0 or \
+                self.rect.x > self.screen.get_width() + self.rect.width or \
+                self.rect.y > self.screen.get_height() + self.rect.height:
+            return True
+        return False
+
     def blit(self):
         """Blit the projectile to the screen"""
         self.screen.blit(self.image, self.rect)
@@ -176,7 +184,10 @@ class PortalController:
                 self.blue_projectile = None     # remove the projectile
                 self.create_blue_portal(x, y, direction)
                 self.sound_manager.play('open')
-        elif self.orange_projectile:
+            # remove if projectile off screen
+            elif self.blue_projectile.is_off_screen():
+                self.blue_projectile = None
+        if self.orange_projectile:
             self.orange_projectile.update()
             # erase projectile if it hits a portal
             if pygame.sprite.spritecollideany(self.orange_projectile, self.blue_portal) or \
@@ -191,6 +202,8 @@ class PortalController:
                 self.orange_projectile = None   # remove the projectile
                 self.create_orange_portal(x, y, direction)
                 self.sound_manager.play('open')
+            elif self.orange_projectile.is_off_screen():
+                self.orange_projectile = None
 
     def portables_usable(self):
         """Return True if the portables are usable (i.e. there are two of them)"""

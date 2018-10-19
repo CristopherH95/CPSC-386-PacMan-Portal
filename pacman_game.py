@@ -143,7 +143,9 @@ class PacManPortalGame:
             if not self.pause:
                 self.ghosts.update()
                 self.player.update()
+                self.maze.teleport.check_teleport(self.player.rect)     # teleport player/projectiles
             for g in self.ghosts:
+                self.maze.teleport.check_teleport(g.rect)   # teleport ghosts
                 g.blit()
             self.player.blit()
             self.score_keeper.blit()

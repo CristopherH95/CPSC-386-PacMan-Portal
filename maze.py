@@ -11,6 +11,21 @@ class Block(pygame.sprite.Sprite):
         self.image = image
 
 
+class Teleporter:
+    """Manages teleportation between one block and another"""
+    def __init__(self, block_1, block_2):
+        self.block_1 = block_1
+        self.block_2 = block_2
+
+    def check_teleport(self, *args):
+        """Check whether another rectangle has collided with either teleportation point"""
+        for other in args:
+            if pygame.Rect.colliderect(self.block_1, other):
+                other.x, other.y = (self.block_2.x - self.block_2.width), self.block_2.y
+            elif pygame.Rect.colliderect(self.block_2, other):
+                other.x, other.y = (self.block_1.x + self.block_1.width), self.block_1.y
+
+
 class Maze:
     """Represents the maze displayed to the screen"""
 
@@ -40,6 +55,7 @@ class Maze:
         self.pellets = pygame.sprite.Group()
         self.power_pellets = pygame.sprite.Group()
         self.fruits = pygame.sprite.Group()
+        self.teleport = None
         self.player_spawn = None    # spawn points
         self.ghost_spawn = []
         self.build_maze()   # init maze from file data
@@ -59,6 +75,7 @@ class Maze:
             self.shield_blocks.empty()
         if len(self.ghost_spawn) > 0:
             self.ghost_spawn.clear()
+        teleport_points = []
         y_start = self.screen.get_height() // 12
         y = 0
         for i in range(len(self.map_lines)):
@@ -99,8 +116,14 @@ class Maze:
                 elif co == 'g':
                     self.ghost_spawn.append(((i, j), (x_start + (x * self.block_size) + (self.block_size // 2),
                                             y_start + (y * self.block_size) + (self.block_size // 2))))
+                elif co == 't':
+                    teleport_points.append(pygame.Rect(x_start + (x * self.block_size),
+                                                       y_start + (y * self.block_size),
+                                                       self.block_size, self.block_size))
                 x += 1
             y += 1
+        if len(teleport_points) == 2:
+            self.teleport = Teleporter(teleport_points[0], teleport_points[1])
 
     def remove_shields(self):
         """Remove any shields from the maze"""
