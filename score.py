@@ -75,6 +75,12 @@ class ScoreBoard:
         self.prep_image()
         self.position()
 
+    def reset(self):
+        """Reset the scoreboard"""
+        self.score = 0
+        self.prep_image()
+        self.position()
+
     def blit(self):
         """Blit the score to the screen"""
         self.screen.blit(self.image, self.rect)
@@ -97,6 +103,11 @@ class ItemCounter:
     def add_items(self, n_items):
         """Increment the item counter by the given number of items"""
         self.counter += n_items
+        self.prep_image()
+
+    def reset_items(self):
+        """Reset the item counter back to 0"""
+        self.counter = 0
         self.prep_image()
 
     def prep_image(self):
@@ -135,6 +146,8 @@ class ScoreController:
     def reset_level(self):
         """Reset level back to its base value"""
         self.level = 1
+        self.scoreboard.reset()
+        self.item_counter.reset_items()
 
     def add_score(self, score, items=None):
         """Add new score and prepare for scoreboard display"""

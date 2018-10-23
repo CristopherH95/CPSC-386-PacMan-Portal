@@ -42,8 +42,8 @@ class Ghost(Sprite):
         self.tile = spawn_info[0]
         self.direction = None
         self.last_position = None
-        self.speed = maze.block_size / 8
-        self.state = {'enabled': False, 'blue': False, 'return': False}
+        self.speed = maze.block_size / 10
+        self.state = {'enabled': False, 'blue': False, 'return': False, 'speed_boost': False}
         self.blue_interval = 5000   # 5 second time limit for blue status
         self.blue_start = None  # timestamp for blue status start
         self.blink = False
@@ -87,6 +87,16 @@ class Ghost(Sprite):
                 if backtrack:   # backtrack to the previous position in the path
                     curr_tile = path.pop()
         return path
+
+    def increase_speed(self):
+        """Increase the ghost's speed"""
+        self.state['speed_boost'] = True
+        self.speed = self.maze.block_size / 8
+
+    def reset_speed(self):
+        """Reset the ghost's speed"""
+        self.state['speed_boost'] = False
+        self.speed = self.maze.block_size / 10
 
     def reset_position(self):
         """Hard reset the ghost position back to its original location"""

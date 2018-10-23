@@ -145,7 +145,10 @@ class PacManPortalGame:
                 self.player.update()
                 self.maze.teleport.check_teleport(self.player.rect)     # teleport player/projectiles
             for g in self.ghosts:
-                self.maze.teleport.check_teleport(g.rect)   # teleport ghosts
+                if self.score_keeper.level > 3:
+                    if not g.state['speed_boost']:
+                        g.increase_speed()
+                    self.maze.teleport.check_teleport(g.rect)   # teleport ghosts
                 g.blit()
             self.player.blit()
             self.score_keeper.blit()
@@ -182,6 +185,8 @@ class PacManPortalGame:
             if menu.ready_to_play:
                 pygame.mixer.music.stop()   # stop menu music
                 self.play_game()    # player selected play, so run game
+                for g in self.ghosts:
+                    g.reset_speed()
                 menu.ready_to_play = False
                 self.score_keeper.save_high_scores()    # save high scores only on complete play
                 hs_screen.prep_images()     # update high scores page
@@ -197,6 +202,11 @@ class PacManPortalGame:
         # pygame.time.set_timer(PacManPortalGame.START_EVENT, self.level_transition.transition_time)
         self.level_transition.set_show_transition()
         self.game_over = False
+        if self.player.dead:
+            self.player.revive()
+            self.score_keeper.reset_level()
+            self.life_counter.reset_counter()
+            self.rebuild_maze()
 
         while e_loop.loop_running:
             self.clock.tick(60)  # 60 fps limit
