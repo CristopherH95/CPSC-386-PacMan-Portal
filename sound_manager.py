@@ -3,7 +3,7 @@ import pygame
 
 class SoundManager:
     """Handles the playing of sound over pygame mixer"""
-    def __init__(self, sound_files, keys=None, channel=0):
+    def __init__(self, sound_files, keys=None, channel=0, volume=None):
         self.sound_files = sound_files
         self.sounds = {}
         self.channel = pygame.mixer.Channel(channel)
@@ -15,6 +15,8 @@ class SoundManager:
                 raise ValueError('number of keys must be the same as the number of sound files')
             for key, s_file in zip(keys, sound_files):
                 self.sounds[key] = pygame.mixer.Sound('sounds/' + s_file)
+        if isinstance(volume, float):
+            self.channel.set_volume(volume)
 
     def play(self, key):
         """Play a sound once"""

@@ -1,12 +1,17 @@
+from sound_manager import SoundManager
 import json
 import pygame
 
 
 class LevelTransition:
     """Displays a level transition"""
+    TRANSITION_CHANNEL = 4
+
     def __init__(self, screen, score_controller, transition_time=5000):
         self.screen = screen
         self.score_controller = score_controller
+        self.sound = SoundManager(['pacman-beginning.wav'], keys=['transition'],
+                                  channel=LevelTransition.TRANSITION_CHANNEL, volume=0.6)
         self.font = pygame.font.Font('fonts/LuckiestGuy-Regular.ttf', 32)
         self.ready_msg = self.font.render('Get Ready!', True, ScoreBoard.SCORE_WHITE)
         self.ready_msg_rect = self.ready_msg.get_rect()
@@ -31,6 +36,7 @@ class LevelTransition:
         self.prep_level_msg()
         self.transition_begin = pygame.time.get_ticks()
         self.transition_show = True
+        self.sound.play('transition')
 
     def draw(self):
         """Display the level transition to the screen"""

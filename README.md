@@ -19,6 +19,7 @@ IMAGES:
   
 AUDIO:
   made using BeepBox (https://www.beepbox.co/), with any additional editing using Audacity (https://www.audacityteam.org/)
+  With the exception of the PacMan Intro theme song
 
 NOTES:
 
