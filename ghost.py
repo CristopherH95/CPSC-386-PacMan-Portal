@@ -100,7 +100,7 @@ class Ghost(Sprite):
 
     def reset_position(self):
         """Hard reset the ghost position back to its original location"""
-        self.rect.centerx, self.rect.centery = self.start_pos
+        self.rect.left, self.rect.top = self.start_pos
 
     def get_dir_from_path(self):
         """Return a new direction based on the next step in the current path"""
@@ -225,11 +225,11 @@ class Ghost(Sprite):
 
     def get_nearest_col(self):
         """Get the current column location on the maze map"""
-        return (self.rect.x - (self.screen.get_width() // 5)) // self.maze.block_size
+        return (self.rect.left - (self.screen.get_width() // 5)) // self.maze.block_size
 
     def get_nearest_row(self):
         """Get the current row location on the maze map"""
-        return (self.rect.y - (self.screen.get_height() // 12)) // self.maze.block_size
+        return (self.rect.top - (self.screen.get_height() // 12)) // self.maze.block_size
 
     def is_at_intersection(self):
         """Return True if the ghost is at an intersection, False if not"""
@@ -304,6 +304,7 @@ class Ghost(Sprite):
         options = self.get_direction_options()
         if self.is_at_intersection() or self.last_position == (self.rect.centerx, self.rect.centery):
             self.direction = self.get_flee_direction(options)
+        print(self.internal_map[self.tile[0]][self.tile[1]])
         if self.direction == 'u' and 'u' in options:
             self.rect.centery -= self.speed
         elif self.direction == 'l' and 'l' in options:

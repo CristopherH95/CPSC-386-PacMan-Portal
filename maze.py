@@ -31,6 +31,7 @@ class Maze:
 
     NEON_BLUE = (25, 25, 166)
     WHITE = (255, 255, 255)
+    PELLET_YELLOW = (255, 255, 0)
 
     def __init__(self, screen, maze_map_file):
         self.screen = screen
@@ -41,7 +42,7 @@ class Maze:
         self.shield_image = pygame.Surface((self.block_size, self.block_size // 2))     # create a shield surface
         self.shield_image.fill(Maze.WHITE)
         self.pellet_image = pygame.Surface((self.block_size // 4, self.block_size // 4))    # create a pellet surface
-        pygame.draw.circle(self.pellet_image, Maze.WHITE,   # draw pellet onto pellet surface
+        pygame.draw.circle(self.pellet_image, Maze.PELLET_YELLOW,   # draw pellet onto pellet surface
                            (self.block_size // 8, self.block_size // 8), self.block_size // 8)
         self.ppellet_image = pygame.Surface((self.block_size // 2, self.block_size // 2))  # create a pellet surface
         pygame.draw.circle(self.ppellet_image, Maze.WHITE,  # draw power pellet onto pellet surface
@@ -114,8 +115,8 @@ class Maze:
                     self.player_spawn = [(i, j), (x_start + (x * self.block_size) + (self.block_size // 2),
                                          y_start + (y * self.block_size) + (self.block_size // 2))]
                 elif co == 'g':
-                    self.ghost_spawn.append(((i, j), (x_start + (x * self.block_size) + (self.block_size // 2),
-                                            y_start + (y * self.block_size) + (self.block_size // 2))))
+                    self.ghost_spawn.append(((i, j), (x_start + (x * self.block_size),
+                                            y_start + (y * self.block_size))))
                 elif co == 't':
                     teleport_points.append(pygame.Rect(x_start + (x * self.block_size),
                                                        y_start + (y * self.block_size),
