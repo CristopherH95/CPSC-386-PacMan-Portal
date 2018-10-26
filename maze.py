@@ -1,14 +1,7 @@
 import pygame
-from image_manager import ImageManager
+from block import Block
+from fruit import Fruit
 from random import randrange
-
-
-class Block(pygame.sprite.Sprite):
-    """Represents a generic block in the maze"""
-    def __init__(self, x, y, width, height, image):
-        super().__init__()
-        self.rect = pygame.Rect(x, y, width, height)
-        self.image = image
 
 
 class Teleporter:
@@ -47,8 +40,6 @@ class Maze:
         self.ppellet_image = pygame.Surface((self.block_size // 2, self.block_size // 2))  # create a pellet surface
         pygame.draw.circle(self.ppellet_image, Maze.WHITE,  # draw power pellet onto pellet surface
                            (self.block_size // 4, self.block_size // 4), self.block_size // 4)
-        self.fruit_image, _ = ImageManager('cherry.png',    # retrieve fruit image
-                                           resize=(self.block_size // 2, self.block_size // 2)).get_image()
         with open(self.map_file, 'r') as file:
             self.map_lines = file.readlines()
         self.maze_blocks = pygame.sprite.Group()    # maze assets
@@ -97,10 +88,9 @@ class Maze:
                                                self.block_size, self.block_size,
                                                self.pellet_image))
                     else:
-                        self.fruits.add(Block(x_start + (self.block_size // 4) + (x * self.block_size),
+                        self.fruits.add(Fruit(x_start + (self.block_size // 4) + (x * self.block_size),
                                               y_start + (self.block_size // 4) + (y * self.block_size),
-                                              self.block_size, self.block_size,
-                                              self.fruit_image))
+                                              self.block_size, self.block_size))
                 elif co == '@':
                     self.power_pellets.add(Block(x_start + (self.block_size // 3) + (x * self.block_size),
                                                  y_start + (self.block_size // 3) + (y * self.block_size),

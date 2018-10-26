@@ -304,7 +304,7 @@ class Ghost(Sprite):
         options = self.get_direction_options()
         if self.is_at_intersection() or self.last_position == (self.rect.centerx, self.rect.centery):
             self.direction = self.get_flee_direction(options)
-        print(self.internal_map[self.tile[0]][self.tile[1]])
+        # print(self.internal_map[self.tile[0]][self.tile[1]])
         if self.direction == 'u' and 'u' in options:
             self.rect.centery -= self.speed
         elif self.direction == 'l' and 'l' in options:
